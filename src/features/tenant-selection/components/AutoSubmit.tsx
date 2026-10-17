@@ -1,5 +1,6 @@
 "use client";
 
+import Typography from "@mui/material/Typography";
 import { useEffect, useRef } from "react";
 
 /**
@@ -14,5 +15,5 @@ export function AutoSubmit({ formId }: { formId: string }) {
     const form = document.getElementById(formId);
     if (form instanceof HTMLFormElement) form.requestSubmit();
   }, [formId]);
-  return <p className="muted" aria-live="polite">Şirketinize geçiliyor…</p>;
+  return <Typography role="status" color="text.secondary" sx={{ mt: 2 }}>Şirketinize geçiliyor…</Typography>;
 }
