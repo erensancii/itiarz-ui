@@ -20,10 +20,9 @@ export function CreateTenantForm() {
   const [adminEmail, setAdminEmail] = useState("");
   const [errors, setErrors] = useState<Errors>({});
   const [result, setResult] = useState<TenantCreated | null>(null);
-  const serverErrors = problem ? describeProblem(problem, "tenant-create").fieldErrors : {};
-  // The only 409 this call returns is a taken slug.
-  const slugConflict = problem?.code === "CONFLICT" ? describeProblem(problem, "tenant-create").message : undefined;
-  const errorFor = (f: keyof Errors) => errors[f] ?? serverErrors[f] ?? (f === "slug" ? slugConflict : undefined);
+  // Field errors from the server, including a 409 for a taken name or slug (shown under that field).
+  const serverErrors: Errors = problem ? describeProblem(problem, "tenant-create").fieldErrors : {};
+  const errorFor = (f: keyof Errors) => errors[f] ?? serverErrors[f];
 
   function clear(f: keyof Errors) {
     if (errors[f]) setErrors((p) => ({ ...p, [f]: undefined }));
@@ -52,7 +51,7 @@ export function CreateTenantForm() {
   });
   const err = (f: keyof Errors, id: string) =>
     errorFor(f) ? <p id={`${id}-error`} className="field-error">{errorFor(f)}</p> : null;
-  const fieldProblem = problem && (Object.keys(serverErrors).length > 0 || slugConflict);
+  const fieldProblem = problem && Object.keys(serverErrors).length > 0;
 
   return (
     <form className="form-grid" onSubmit={submit} noValidate>

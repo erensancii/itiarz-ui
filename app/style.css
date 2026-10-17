@@ -148,6 +148,8 @@ code { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-siz
 }
 .switcher-option:hover { background: var(--surface-2); }
 .switcher-option small { color: var(--muted); font-size: 12px; }
+.switcher-disabled { cursor: default; }
+.switcher-disabled:hover { background: transparent; }
 
 .sidenav { grid-area: nav; background: var(--surface); border-right: 1px solid var(--line); padding: 12px 8px; }
 .sidenav ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
@@ -290,6 +292,9 @@ input[aria-invalid="true"], textarea[aria-invalid="true"] { border-color: var(--
 .tenant-card-role { grid-area: role; color: var(--muted); font-size: 13px; }
 .tenant-card-cta { grid-area: cta; color: var(--accent); font-weight: 600; font-size: 13px; }
 .tenant-current { border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
+.tenant-suspended { cursor: default; background: var(--surface-2); grid-template-columns: 1fr; grid-template-areas: "name" "role" "note"; }
+.tenant-suspended:hover { border-color: var(--line); }
+.tenant-card-note { grid-area: note; color: var(--wait); font-size: 13px; margin-top: 4px; }
 
 /* ---------- narrow screens ---------- */
 @media (max-width: 900px) {

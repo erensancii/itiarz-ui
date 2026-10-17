@@ -90,3 +90,22 @@ describe("admin context drops other backend details", () => {
     expect(describeProblem({ status: 400, detail: "Bad internal thing" }, "admin").message).not.toMatch(/internal/);
   });
 });
+
+describe("tenant-create conflicts point at the clashing field", () => {
+  it("shows a taken name under the name field", () => {
+    const d = describeProblem({ status: 409, code: "CONFLICT",
+      errors: [{ field: "name", message: "Organization name exists" }] }, "tenant-create");
+    expect(d.fieldErrors).toEqual({ name: "Bu şirket adı kullanımda. Farklı bir ad girin." });
+    expect(d.title).toBe("Şirket adı kullanımda");
+  });
+  it("shows a taken slug under the slug field", () => {
+    const d = describeProblem({ status: 409, code: "CONFLICT",
+      errors: [{ field: "slug", message: "alias exists" }] }, "tenant-create");
+    expect(d.fieldErrors).toEqual({
+      slug: "Bu kısa ad (slug) başka bir şirket tarafından kullanılıyor. Farklı bir kısa ad seçin." });
+  });
+  it("treats a field-less 409 as a slug clash", () => {
+    expect(describeProblem({ status: 409, code: "CONFLICT" }, "tenant-create").fieldErrors).toEqual({
+      slug: "Bu kısa ad (slug) başka bir şirket tarafından kullanılıyor. Farklı bir kısa ad seçin." });
+  });
+});

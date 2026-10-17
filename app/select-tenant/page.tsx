@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { roleLabel } from "../../lib/me";
+import { autoSwitchTarget, isSelectable, roleLabel, SUSPENDED_TENANT_NOTE } from "../../lib/me";
 import { requireMe } from "../../lib/server-api";
 import { Brand, LogoutButton } from "../components/Brand";
 import { ProblemMessage } from "../components/ProblemMessage";
@@ -28,7 +28,7 @@ export default async function SelectTenantPage({ searchParams }: { searchParams:
     );
   }
   const me = result.me;
-  const autoSwitch = !authError && !me.activeTenant && me.memberships.length === 1;
+  const autoSwitch = autoSwitchTarget(me, authError) !== null;
 
   return (
     <main className="center-page" id="main">
@@ -63,7 +63,13 @@ export default async function SelectTenantPage({ searchParams }: { searchParams:
             const current = me.activeTenant?.slug === m.slug;
             return (
               <li key={m.slug}>
-                {current ? (
+                {!isSelectable(m) ? (
+                  <div className="tenant-card tenant-suspended" aria-disabled="true">
+                    <span className="tenant-card-name">{m.name}</span>
+                    <span className="tenant-card-role">{roleLabel(m.role)}</span>
+                    <span className="tenant-card-note">{SUSPENDED_TENANT_NOTE}</span>
+                  </div>
+                ) : current ? (
                   <Link className="tenant-card tenant-current" href="/cases" aria-current="true">
                     <span className="tenant-card-name">{m.name}</span>
                     <span className="tenant-card-role">{roleLabel(m.role)}, şu an bu şirkettesiniz</span>

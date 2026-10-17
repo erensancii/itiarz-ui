@@ -43,9 +43,15 @@ export function describeProblem(p: Problem, context: ProblemContext = "case"): P
     // Outside case screens a 409 is a business conflict whose backend text already says what to do.
     case "CONFLICT":
       // Fixed texts per call: the backend detail is never passed through here.
+      // Tenant creation: a taken name (errors[].field "name") or a taken slug (any other 409),
+      // shown under the clashing field.
       if (context === "tenant-create") {
-        return { ...base, title: "Kısa ad kullanımda",
-          message: "Bu kısa ad (slug) başka bir şirket tarafından kullanılıyor. Farklı bir kısa ad seçin." };
+        if ("name" in fieldErrors) {
+          const message = "Bu şirket adı kullanımda. Farklı bir ad girin.";
+          return { ...base, fieldErrors: { name: message }, title: "Şirket adı kullanımda", message };
+        }
+        const message = "Bu kısa ad (slug) başka bir şirket tarafından kullanılıyor. Farklı bir kısa ad seçin.";
+        return { ...base, fieldErrors: { slug: message }, title: "Kısa ad kullanımda", message };
       }
       if (context === "tenant-reinvite") {
         return { ...base, title: "Davet zaten var",
