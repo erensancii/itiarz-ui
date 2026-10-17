@@ -1,5 +1,4 @@
-import Button from "@mui/material/Button";
-import NextLink from "next/link";
+import { LinkButton } from "@/shared/components/LinkButton";
 import { listCases } from "@/features/cases/api/cases.server";
 import { CasesTable } from "@/features/cases/components/CasesTable";
 import { requirePermission } from "@/shared/auth/guards";
@@ -17,7 +16,7 @@ export default async function CasesPage() {
     <>
       <PageHeader
         title="İtirazlar"
-        actions={can(me, "case:write") && <Button component={NextLink} href="/cases/new" variant="contained">Yeni itiraz</Button>}
+        actions={can(me, "case:write") && <LinkButton href="/cases/new" variant="contained">Yeni itiraz</LinkButton>}
       />
       {result.ok ? <CasesTable cases={result.data} /> : <ProblemAlert problem={result.problem} />}
     </>

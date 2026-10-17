@@ -1,8 +1,7 @@
 import Alert from "@mui/material/Alert";
 import AlertTitle from "@mui/material/AlertTitle";
-import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
-import NextLink from "next/link";
+import { LinkButton } from "@/shared/components/LinkButton";
 import { autoSwitchTarget } from "@/shared/auth/model";
 import { requireMe } from "@/shared/api/backend.server";
 import { CenteredPage } from "@/shared/components/CenteredPage";
@@ -53,7 +52,7 @@ export default async function SelectTenantPage({ searchParams }: { searchParams:
           <EmptyState
             title="Bir şirkete üye değilsiniz."
             description="Platform yöneticisi olarak şirketleri yönetebilirsiniz."
-            action={<Button component={NextLink} href="/platform/tenants" variant="contained">Platform yönetimine git</Button>}
+            action={<LinkButton href="/platform/tenants" variant="contained">Platform yönetimine git</LinkButton>}
           />
         ) : (
           <EmptyState title="Henüz bir şirkete üye değilsiniz." description="Şirket yöneticinizden davet isteyin." />
@@ -63,7 +62,7 @@ export default async function SelectTenantPage({ searchParams }: { searchParams:
       )}
 
       {me.platformAdmin && me.memberships.length > 0 && (
-        <Button component={NextLink} href="/platform/tenants" sx={{ mt: 2 }}>Platform yönetimine git</Button>
+        <LinkButton href="/platform/tenants" sx={{ mt: 2 }}>Platform yönetimine git</LinkButton>
       )}
       {autoSwitch && <AutoSubmit formId="auto-switch" />}
     </CenteredPage>

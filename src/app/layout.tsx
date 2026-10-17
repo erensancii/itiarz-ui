@@ -1,7 +1,6 @@
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v16-appRouter";
 import type { ReactNode } from "react";
 import { ThemeRegistry } from "@/shared/theme/ThemeRegistry";
-import "./style.css";
 
 export const metadata = {
   title: "itiarz",

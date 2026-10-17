@@ -1,7 +1,6 @@
-import Button from "@mui/material/Button";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
-import NextLink from "next/link";
+import { LinkButton } from "@/shared/components/LinkButton";
 
 export default function NotFound() {
   return (
@@ -10,7 +9,7 @@ export default function NotFound() {
       <Typography color="text.secondary" sx={{ mb: 3 }}>
         Kayıt silinmiş ya da başka bir şirkete ait olabilir.
       </Typography>
-      <Button component={NextLink} href="/cases" variant="contained">İtirazlara dön</Button>
+      <LinkButton href="/cases" variant="contained">İtirazlara dön</LinkButton>
     </Paper>
   );
 }

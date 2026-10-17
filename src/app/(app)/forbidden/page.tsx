@@ -1,7 +1,6 @@
-import Button from "@mui/material/Button";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
-import NextLink from "next/link";
+import { LinkButton } from "@/shared/components/LinkButton";
 import { requireMe } from "@/shared/api/backend.server";
 
 export const metadata = { title: "Erişim yok | itiarz" };
@@ -16,9 +15,9 @@ export default async function ForbiddenPage() {
         Bu işlem için gereken yetkiniz bulunmuyor. Gerekirse şirket yöneticinizden yetki isteyin.
       </Typography>
       {platformOnly ? (
-        <Button component={NextLink} href="/platform/tenants" variant="contained">Platforma dön</Button>
+        <LinkButton href="/platform/tenants" variant="contained">Platforma dön</LinkButton>
       ) : (
-        <Button component={NextLink} href="/cases" variant="contained">İtirazlara dön</Button>
+        <LinkButton href="/cases" variant="contained">İtirazlara dön</LinkButton>
       )}
     </Paper>
   );
