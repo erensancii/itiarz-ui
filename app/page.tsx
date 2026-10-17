@@ -62,7 +62,7 @@ export default function Home() {
   const unresolved = cases.filter(x=>!["Won","Lost"].includes(x.status)).length;
   return <main className="layout">
     <aside className="sidebar">
-      <div className="brand"><span className="brandlogo">D</span><div>DisputePilot<small>Merchant Operations</small></div></div>
+      <div className="brand"><span className="brandlogo">D</span><div>itiarz<small>Merchant Operations</small></div></div>
       <div className="nav activeNav">İtiraz dosyaları <span>{cases.length}</span></div>
       <div className="nav">Kanıt kontrolü (dosya içinde)</div><div className="nav">Analitik (sonraki sürüm)</div>
       <div className="asidefoot">YEREL DEMO<br/><b>Gerçek banka entegrasyonu yok</b></div>

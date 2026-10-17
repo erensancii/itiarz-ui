@@ -1,6 +1,6 @@
 import "./style.css";
 export const metadata = {
-  title: "DisputePilot | İtiraz Operasyonu",
+  title: "itiarz | İtiraz Operasyonu",
   description: "Bağımsız chargeback dosyası ve kanıt takip prototipi"
 };
 export default function RootLayout({ children }: { children: React.ReactNode }) {
