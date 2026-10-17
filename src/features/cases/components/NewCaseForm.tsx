@@ -1,110 +1,128 @@
 "use client";
 
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Paper from "@mui/material/Paper";
+import TextField from "@mui/material/TextField";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { REASON_LABELS } from "@/features/cases/model";
-import { useApiAction } from "@/shared/api/apiClient";
+import { useCaseActions } from "@/features/cases/api/cases.client";
+import { CURRENCY_OPTIONS, REASON_OPTIONS, type CaseReason } from "@/features/cases/model";
 import { describeProblem } from "@/shared/api/problem";
+import { FormAutoCompleteDropdown } from "@/shared/components/FormAutoCompleteDropdown";
+import { useNotify } from "@/shared/components/Notifications";
 import { ProblemAlert } from "@/shared/components/ProblemAlert";
 
-const PROVIDERS = ["iyzico", "PayTR", "Param", "Papara", "Stripe"];
+type Field = "provider" | "providerCaseId" | "orderId" | "reason" | "amount" | "currency" | "deadlineUtc";
+type Values = { provider: string; providerCaseId: string; orderId: string; reason: CaseReason | null; amount: string; currency: string | null; deadline: string };
 
-type Errors = Partial<Record<"provider" | "providerCaseId" | "orderId" | "amount" | "deadlineUtc", string>>;
-
-function validate(fd: FormData): Errors {
-  const errors: Errors = {};
-  if (!String(fd.get("provider") ?? "").trim()) errors.provider = "Ödeme sağlayıcısını yazın.";
-  if (!String(fd.get("providerCaseId") ?? "").trim()) errors.providerCaseId = "Sağlayıcının verdiği dosya numarasını yazın.";
-  if (!String(fd.get("orderId") ?? "").trim()) errors.orderId = "Sipariş numarasını yazın.";
-  const amount = Number(String(fd.get("amount") ?? "").replace(",", "."));
-  if (!(amount >= 0.01)) errors.amount = "Tutarı 0,01 veya üzeri bir sayı olarak yazın.";
-  const deadline = String(fd.get("deadline") ?? "");
-  if (!deadline) errors.deadlineUtc = "Son tarihi seçin.";
-  else if (new Date(deadline).getTime() <= Date.now()) errors.deadlineUtc = "Son tarih gelecekte bir zaman olmalı.";
+function validate(v: Values): Partial<Record<Field, string>> {
+  const errors: Partial<Record<Field, string>> = {};
+  if (!v.provider.trim()) errors.provider = "Ödeme sağlayıcısını yazın.";
+  if (!v.providerCaseId.trim()) errors.providerCaseId = "Sağlayıcının verdiği dosya numarasını yazın.";
+  if (!v.orderId.trim()) errors.orderId = "Sipariş numarasını yazın.";
+  if (!v.reason) errors.reason = "İtiraz nedenini seçin.";
+  if (!(Number(v.amount.replace(",", ".")) >= 0.01)) errors.amount = "Tutarı 0,01 veya üzeri bir sayı olarak yazın.";
+  if (!v.currency) errors.currency = "Para birimini seçin.";
+  if (!v.deadline) errors.deadlineUtc = "Son tarihi seçin.";
+  else if (new Date(v.deadline).getTime() <= Date.now()) errors.deadlineUtc = "Son tarih gelecekte bir zaman olmalı.";
   return errors;
 }
 
 export function NewCaseForm() {
   const router = useRouter();
-  const { run, busy, problem, clearProblem } = useApiAction();
-  const [errors, setErrors] = useState<Errors>({});
-  const serverFieldErrors = problem ? describeProblem(problem).fieldErrors : {};
-  const errorFor = (field: keyof Errors) => errors[field] ?? serverFieldErrors[field];
+  const notify = useNotify();
+  const { createCase, busy, problem, clear } = useCaseActions();
+  const [values, setValues] = useState<Values>({
+    provider: "", providerCaseId: "", orderId: "", reason: "NotReceived", amount: "", currency: "TRY", deadline: "",
+  });
+  const [errors, setErrors] = useState<Partial<Record<Field, string>>>({});
+  const serverErrors = problem ? describeProblem(problem).fieldErrors : {};
+  const errorFor = (f: Field) => errors[f] ?? serverErrors[f];
+  const set = <K extends keyof Values>(key: K, field: Field) => (value: Values[K]) => {
+    setValues((prev) => ({ ...prev, [key]: value }));
+    if (errors[field]) setErrors((prev) => ({ ...prev, [field]: undefined }));
+  };
 
-  async function submit(e: React.FormEvent<HTMLFormElement>) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
-    const fd = new FormData(e.currentTarget);
-    const found = validate(fd);
+    const found = validate(values);
     setErrors(found);
     if (Object.keys(found).length > 0) return;
-    const created = await run<{ id: string }>("cases", "POST", {
-      provider: String(fd.get("provider")).trim(),
-      providerCaseId: String(fd.get("providerCaseId")).trim(),
-      orderId: String(fd.get("orderId")).trim(),
-      reason: fd.get("reason"),
-      amount: Number(String(fd.get("amount")).replace(",", ".")),
-      currency: fd.get("currency"),
-      deadlineUtc: new Date(String(fd.get("deadline"))).toISOString(),
-    }, { refresh: false });
-    if (created?.id) router.push(`/cases/${created.id}`);
+    const created = await createCase({
+      provider: values.provider.trim(),
+      providerCaseId: values.providerCaseId.trim(),
+      orderId: values.orderId.trim(),
+      reason: values.reason!,
+      amount: Number(values.amount.replace(",", ".")),
+      currency: values.currency!,
+      deadlineUtc: new Date(values.deadline).toISOString(),
+    });
+    if (created?.id) {
+      notify("İtiraz kaydedildi.");
+      router.push(`/cases/${created.id}`);
+    }
   }
 
-  const field = (name: keyof Errors, id: string) => ({
-    id,
-    name: id === "deadline" ? "deadline" : name,
-    "aria-invalid": errorFor(name) ? true : undefined,
-    "aria-describedby": errorFor(name) ? `${id}-error` : undefined,
-    onChange: () => errors[name] && setErrors((prev) => ({ ...prev, [name]: undefined })),
-  });
-  const err = (name: keyof Errors, id: string) =>
-    errorFor(name) ? <p id={`${id}-error`} className="field-error">{errorFor(name)}</p> : null;
+  const text = (key: "provider" | "providerCaseId" | "orderId", label: string) => (
+    <TextField
+      label={label}
+      required
+      value={values[key]}
+      onChange={(e) => set(key, key)(e.target.value)}
+      error={!!errorFor(key)}
+      helperText={errorFor(key)}
+      slotProps={{ htmlInput: { maxLength: 80, autoComplete: "off" } }}
+    />
+  );
 
   return (
-    <form className="panel form-grid" onSubmit={submit} noValidate>
-      <div className="field">
-        <label htmlFor="provider">Ödeme sağlayıcısı</label>
-        <input type="text" list="provider-options" maxLength={80} autoComplete="off" {...field("provider", "provider")} />
-        <datalist id="provider-options">{PROVIDERS.map((p) => <option key={p} value={p} />)}</datalist>
-        {err("provider", "provider")}
-      </div>
-      <div className="field">
-        <label htmlFor="providerCaseId">Sağlayıcı dosya no</label>
-        <input type="text" maxLength={80} autoComplete="off" {...field("providerCaseId", "providerCaseId")} />
-        {err("providerCaseId", "providerCaseId")}
-      </div>
-      <div className="field">
-        <label htmlFor="orderId">Sipariş no</label>
-        <input type="text" maxLength={80} autoComplete="off" {...field("orderId", "orderId")} />
-        {err("orderId", "orderId")}
-      </div>
-      <div className="field">
-        <label htmlFor="reason">İtiraz nedeni</label>
-        <select id="reason" name="reason" defaultValue="NotReceived">
-          {Object.entries(REASON_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-        </select>
-      </div>
-      <div className="field">
-        <label htmlFor="amount">Tutar</label>
-        <input type="text" inputMode="decimal" placeholder="1250,00" {...field("amount", "amount")} />
-        {err("amount", "amount")}
-      </div>
-      <div className="field">
-        <label htmlFor="currency">Para birimi</label>
-        <select id="currency" name="currency" defaultValue="TRY">
-          <option value="TRY">TRY</option>
-          <option value="USD">USD</option>
-          <option value="EUR">EUR</option>
-        </select>
-      </div>
-      <div className="field">
-        <label htmlFor="deadline">Son tarih</label>
-        <input type="datetime-local" {...field("deadlineUtc", "deadline")} />
-        {err("deadlineUtc", "deadline")}
-      </div>
-      <div className="form-actions">
-        <button type="submit" className="btn btn-primary" disabled={busy}>İtirazı kaydet</button>
-      </div>
-      {problem && <div className="form-problem"><ProblemAlert problem={problem} onDismiss={clearProblem} /></div>}
-    </form>
+    <Paper variant="outlined" component="form" onSubmit={submit} noValidate sx={{ p: 3, maxWidth: 760 }}>
+      <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { sm: "1fr 1fr" } }}>
+        {text("provider", "Ödeme sağlayıcısı")}
+        {text("providerCaseId", "Sağlayıcı dosya no")}
+        {text("orderId", "Sipariş no")}
+        <FormAutoCompleteDropdown
+          label="İtiraz nedeni"
+          required
+          options={REASON_OPTIONS}
+          value={values.reason}
+          onChange={set("reason", "reason")}
+          error={!!errorFor("reason")}
+          helperText={errorFor("reason")}
+        />
+        <TextField
+          label="Tutar"
+          required
+          placeholder="1250,00"
+          value={values.amount}
+          onChange={(e) => set("amount", "amount")(e.target.value)}
+          error={!!errorFor("amount")}
+          helperText={errorFor("amount")}
+          slotProps={{ htmlInput: { inputMode: "decimal" } }}
+        />
+        <FormAutoCompleteDropdown
+          label="Para birimi"
+          required
+          options={CURRENCY_OPTIONS}
+          value={values.currency}
+          onChange={set("currency", "currency")}
+          error={!!errorFor("currency")}
+          helperText={errorFor("currency")}
+        />
+        <TextField
+          label="Son tarih"
+          type="datetime-local"
+          required
+          value={values.deadline}
+          onChange={(e) => set("deadline", "deadlineUtc")(e.target.value)}
+          error={!!errorFor("deadlineUtc")}
+          helperText={errorFor("deadlineUtc")}
+          slotProps={{ inputLabel: { shrink: true } }}
+        />
+      </Box>
+      <Button type="submit" variant="contained" disabled={busy} sx={{ mt: 3 }}>İtirazı kaydet</Button>
+      {problem && <Box sx={{ mt: 2 }}><ProblemAlert problem={problem} onDismiss={clear} /></Box>}
+    </Paper>
   );
 }

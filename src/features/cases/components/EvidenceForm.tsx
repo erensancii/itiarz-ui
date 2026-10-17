@@ -1,51 +1,67 @@
 "use client";
 
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
 import { useState } from "react";
-import { EVIDENCE_LABELS, nextEvidenceKind, type CaseStatus } from "@/features/cases/model";
-import { useApiAction } from "@/shared/api/apiClient";
+import { useCaseActions } from "@/features/cases/api/cases.client";
+import { evidenceOptions, nextEvidenceKind, type CaseStatus } from "@/features/cases/model";
+import { FormAutoCompleteDropdown } from "@/shared/components/FormAutoCompleteDropdown";
+import { useNotify } from "@/shared/components/Notifications";
 import { ProblemAlert } from "@/shared/components/ProblemAlert";
 
 /** Adds an evidence record; defaults to the first missing required kind. */
 export function EvidenceForm({ caseId, missing, status }: { caseId: string; missing: string[]; status: CaseStatus }) {
-  const { run, busy, problem, clearProblem } = useApiAction();
-  const [kind, setKind] = useState(missing[0] ?? "PaymentRecord");
+  const { addEvidence, busy, problem, clear } = useCaseActions();
+  const notify = useNotify();
+  const [kind, setKind] = useState<string | null>(missing[0] ?? "PaymentRecord");
   const [note, setNote] = useState("");
+  const [kindError, setKindError] = useState("");
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    const ok = await run(`cases/${caseId}/evidence`, "POST", { kind, note: note.trim() || undefined });
+    if (!kind) {
+      setKindError("Kanıt türünü seçin.");
+      return;
+    }
+    const ok = await addEvidence(caseId, { kind, note: note.trim() || undefined });
     if (ok) {
       setNote("");
       setKind(nextEvidenceKind(missing, kind));
+      notify("Kanıt eklendi.");
     }
   }
 
   return (
-    <form className="evidence-form" onSubmit={submit}>
-      <h3>Kanıt ekle</h3>
-      <div className="field-row">
-        <div className="field">
-          <label htmlFor="evidence-kind">Kanıt türü</label>
-          <select id="evidence-kind" value={kind} onChange={(e) => setKind(e.target.value)}>
-            {Object.entries(EVIDENCE_LABELS).map(([value, label]) => (
-              <option key={value} value={value}>{missing.includes(value) ? `${label} (eksik)` : label}</option>
-            ))}
-          </select>
-        </div>
-        <div className="field field-grow">
-          <label htmlFor="evidence-note">Not <span className="optional">(isteğe bağlı)</span></label>
-          <input id="evidence-note" type="text" maxLength={500} value={note} onChange={(e) => setNote(e.target.value)} />
-        </div>
-      </div>
+    <Box component="form" onSubmit={submit} noValidate sx={{ mt: 2 }}>
+      <Typography variant="subtitle2" component="h3" gutterBottom>Kanıt ekle</Typography>
+      <Box sx={{ display: "grid", gap: 1.5, gridTemplateColumns: { sm: "220px 1fr" } }}>
+        <FormAutoCompleteDropdown
+          label="Kanıt türü"
+          options={evidenceOptions(missing)}
+          value={kind}
+          onChange={(v) => { setKind(v); setKindError(""); }}
+          required
+          error={!!kindError}
+          helperText={kindError || undefined}
+        />
+        <TextField
+          label="Not (isteğe bağlı)"
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          slotProps={{ htmlInput: { maxLength: 500 } }}
+        />
+      </Box>
       {(status === "Ready" || status === "Open") && (
-        <p className="hint">
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
           {status === "Ready"
             ? "Kanıt eklemek dosyayı yeniden Hazırlanıyor durumuna alır; onay için tekrar hazır olarak işaretlenmesi gerekir."
             : "Kanıt eklemek dosyayı Hazırlanıyor durumuna alır."}
-        </p>
+        </Typography>
       )}
-      <button type="submit" className="btn" disabled={busy}>Kanıtı ekle</button>
-      {problem && <ProblemAlert problem={problem} onDismiss={clearProblem} />}
-    </form>
+      <Button type="submit" variant="outlined" disabled={busy} sx={{ mt: 1.5 }}>Kanıtı ekle</Button>
+      {problem && <Box sx={{ mt: 2 }}><ProblemAlert problem={problem} onDismiss={clear} /></Box>}
+    </Box>
   );
 }

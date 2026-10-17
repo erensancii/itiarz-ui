@@ -177,3 +177,32 @@ const DATE_TIME = new Intl.DateTimeFormat("tr-TR", {
 export function formatDateTime(iso: string): string {
   return DATE_TIME.format(new Date(iso));
 }
+
+/** POST /api/cases body. */
+export type NewCaseInput = {
+  provider: string;
+  providerCaseId: string;
+  orderId: string;
+  reason: CaseReason;
+  amount: number;
+  currency: string;
+  deadlineUtc: string;
+};
+
+export type Option<V extends string = string> = { value: V; label: string };
+
+export const REASON_OPTIONS: Option<CaseReason>[] = (Object.keys(REASON_LABELS) as CaseReason[]).map((value) => ({
+  value,
+  label: REASON_LABELS[value],
+}));
+
+export const CURRENCY_OPTIONS: Option[] = ["TRY", "USD", "EUR"].map((value) => ({ value, label: value }));
+
+/** Every evidence kind, still-missing required kinds first and marked "(eksik)". */
+export function evidenceOptions(missing: readonly string[]): Option[] {
+  const rest = Object.keys(EVIDENCE_LABELS).filter((k) => !missing.includes(k));
+  return [
+    ...missing.map((value) => ({ value, label: `${evidenceLabel(value)} (eksik)` })),
+    ...rest.map((value) => ({ value, label: evidenceLabel(value) })),
+  ];
+}

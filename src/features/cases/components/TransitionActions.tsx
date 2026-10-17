@@ -1,8 +1,13 @@
 "use client";
 
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
 import { useState } from "react";
-import type { TransitionOption } from "@/features/cases/model";
-import { useApiAction } from "@/shared/api/apiClient";
+import { useCaseActions } from "@/features/cases/api/cases.client";
+import { STATUS_LABELS, type TransitionOption } from "@/features/cases/model";
+import { useNotify } from "@/shared/components/Notifications";
 import { ProblemAlert } from "@/shared/components/ProblemAlert";
 
 const REASON_MAX = 500;
@@ -14,16 +19,18 @@ export function TransitionActions({ caseId, version, options, missingCount }: {
   options: TransitionOption[];
   missingCount: number;
 }) {
-  const { run, busy, problem, clearProblem } = useApiAction();
+  const { transition, busy, problem, clear } = useCaseActions();
+  const notify = useNotify();
   const [reasonFor, setReasonFor] = useState<TransitionOption | null>(null);
   const [reason, setReason] = useState("");
   const [reasonError, setReasonError] = useState("");
 
   async function go(option: TransitionOption, why?: string) {
-    const ok = await run(`cases/${caseId}/transitions`, "POST", { to: option.to, reason: why || undefined, version });
+    const ok = await transition(caseId, { to: option.to, reason: why || undefined, version });
     if (ok) {
       setReasonFor(null);
       setReason("");
+      notify(`Dosya durumu: ${STATUS_LABELS[option.to]}.`);
     }
   }
 
@@ -39,41 +46,49 @@ export function TransitionActions({ caseId, version, options, missingCount }: {
   }
 
   return (
-    <div className="transitions">
-      <div className="button-row">
+    <Box>
+      <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
         {options.map((o) => (
-          <button key={o.to} type="button" disabled={busy}
-            className={o.tone === "primary" ? "btn btn-primary" : "btn"}
+          <Button
+            key={o.to}
+            disabled={busy}
+            variant={o.tone === "primary" ? "contained" : "outlined"}
             aria-expanded={o.needsReason ? reasonFor?.to === o.to : undefined}
             onClick={() => {
-              clearProblem();
+              clear();
               if (o.needsReason) { setReasonFor(reasonFor?.to === o.to ? null : o); setReasonError(""); }
               else void go(o);
-            }}>
+            }}
+          >
             {o.label}
-          </button>
+          </Button>
         ))}
-      </div>
+      </Box>
       {missingCount > 0 && options.some((o) => o.to === "Ready") && (
-        <p className="hint">Hazır olarak işaretlemek için önce {missingCount} eksik zorunlu kanıtı ekleyin.</p>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+          Hazır olarak işaretlemek için önce {missingCount} eksik zorunlu kanıtı ekleyin.
+        </Typography>
       )}
       {reasonFor && (
-        <form className="reason-form" onSubmit={submitReason} noValidate>
-          <label htmlFor="send-back-reason">Geri gönderme gerekçesi</label>
-          <textarea id="send-back-reason" rows={3} maxLength={REASON_MAX} value={reason} autoFocus
-            aria-invalid={reasonError ? true : undefined}
-            aria-describedby={reasonError ? "send-back-reason-error" : "send-back-reason-hint"}
-            onChange={(e) => { setReason(e.target.value); if (reasonError) setReasonError(""); }} />
-          {reasonError
-            ? <p id="send-back-reason-error" className="field-error">{reasonError}</p>
-            : <p id="send-back-reason-hint" className="hint">En fazla {REASON_MAX} karakter. Gerekçe geçiş geçmişinde görünür.</p>}
-          <div className="button-row">
-            <button type="submit" className="btn btn-primary" disabled={busy}>Gerekçeyle geri gönder</button>
-            <button type="button" className="btn btn-quiet" onClick={() => setReasonFor(null)}>Vazgeç</button>
-          </div>
-        </form>
+        <Box component="form" onSubmit={submitReason} noValidate sx={{ mt: 2 }}>
+          <TextField
+            label="Geri gönderme gerekçesi"
+            multiline
+            minRows={3}
+            autoFocus
+            value={reason}
+            onChange={(e) => { setReason(e.target.value); if (reasonError) setReasonError(""); }}
+            error={!!reasonError}
+            helperText={reasonError || `En fazla ${REASON_MAX} karakter. Gerekçe geçiş geçmişinde görünür.`}
+            slotProps={{ htmlInput: { maxLength: REASON_MAX } }}
+          />
+          <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
+            <Button type="submit" variant="contained" disabled={busy}>Gerekçeyle geri gönder</Button>
+            <Button onClick={() => setReasonFor(null)}>Vazgeç</Button>
+          </Box>
+        </Box>
       )}
-      {problem && <ProblemAlert problem={problem} onDismiss={clearProblem} />}
-    </div>
+      {problem && <Box sx={{ mt: 2 }}><ProblemAlert problem={problem} onDismiss={clear} /></Box>}
+    </Box>
   );
 }
