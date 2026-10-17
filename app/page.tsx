@@ -30,7 +30,7 @@ export default function Home() {
   const active = useMemo(() => cases.find(c => c.id === selected), [cases,selected]);
   const money = (v:number,c:string) => new Intl.NumberFormat("tr-TR", { style:"currency", currency:c }).format(v);
   async function refresh() {
-    const r = await fetch(`/api/cases`, {cache:"no-store"});
+    const r = await fetch(`/api/proxy/cases`, {cache:"no-store"});
     if (!r.ok) throw new Error("API yanıt vermedi");
     const list:Case[] = await r.json(); setCases(list);
     setSelected(prev => list.some(x => x.id === prev) ? prev : (list[0]?.id ?? ""));
@@ -51,7 +51,7 @@ export default function Home() {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
     const date = new Date(String(fd.get("deadline")));
-    const ok = await mutate("/api/cases","POST", {
+    const ok = await mutate("/api/proxy/cases","POST", {
       provider:fd.get("provider"),providerCaseId:fd.get("providerCaseId"),
       orderId:fd.get("orderId"),reason:fd.get("reason"),
       amount:Number(fd.get("amount")),currency:"TRY",deadlineUtc:date.toISOString()
@@ -97,11 +97,11 @@ export default function Home() {
             <h3>Kanıt kaydı ekle</h3><div className="evidenceform">
               <select value={kind} onChange={e=>setKind(e.target.value)}>{allKinds.map(k=><option value={k} key={k}>{evidenceLabels[k]}</option>)}</select>
               <input placeholder="Kanıtın referans kodu (kişisel veri yazmayın)" value={note} onChange={e=>setNote(e.target.value)} maxLength={500}/>
-              <button disabled={busy || ["Submitted","Won","Lost"].includes(active.status)} onClick={async ()=>{if (await mutate(`/api/cases/${active.id}/evidence`,"POST",{kind,note})) setNote("");}}>Kaydet</button>
+              <button disabled={busy || ["Submitted","Won","Lost"].includes(active.status)} onClick={async ()=>{if (await mutate(`/api/proxy/cases/${active.id}/evidence`,"POST",{kind,note})) setNote("");}}>Kaydet</button>
             </div>
             <div className="actions">
-              <button className="ghost" disabled={busy||active.missing.length>0||!["Open","InProgress"].includes(active.status)} onClick={()=>mutate(`/api/cases/${active.id}/status`,"PATCH",{status:"Ready"})}>Kanıtlar hazır</button>
-              <button disabled={busy||active.status!=="Ready"} onClick={()=>mutate(`/api/cases/${active.id}/status`,"PATCH",{status:"Submitted"})}>Dışarı gönderildi olarak işaretle</button>
+              <button className="ghost" disabled={busy||active.missing.length>0||!["Open","InProgress"].includes(active.status)} onClick={()=>mutate(`/api/proxy/cases/${active.id}/status`,"PATCH",{status:"Ready"})}>Kanıtlar hazır</button>
+              <button disabled={busy||active.status!=="Ready"} onClick={()=>mutate(`/api/proxy/cases/${active.id}/status`,"PATCH",{status:"Submitted"})}>Dışarı gönderildi olarak işaretle</button>
             </div>
           </>}
         </div>

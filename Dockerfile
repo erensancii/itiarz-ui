@@ -2,7 +2,9 @@ FROM node:22-alpine AS builder
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 COPY package*.json ./
-RUN npm install --no-audit --no-fund
+RUN npm ci --no-audit --no-fund
+ARG COOKIE_SECURE=false
+ENV COOKIE_SECURE=$COOKIE_SECURE
 COPY . ./
 RUN npm run build
 
