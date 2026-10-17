@@ -1,0 +1,11 @@
+# Dependencies, build output and local files (itiarz-ui)
+node_modules/
+.next/
+*.tsbuildinfo
+coverage/
+.idea/
+.vscode/
+*.log
+.DS_Store
+.env
+.env.local
