@@ -1,8 +1,10 @@
 import type { NextConfig } from "next";
 
 // Note: next.config headers are resolved at BUILD time (routes-manifest), so COOKIE_SECURE
-// must be set in the build environment for HSTS to be emitted.
+// and KC_PUBLIC_URL must be present in the build environment (Docker build args).
 const cookieSecure = process.env.COOKIE_SECURE === "true";
+// Keycloak origin for form-action (login/logout forms post or redirect there).
+const keycloakOrigin = new URL(process.env.KC_PUBLIC_URL || "http://localhost:8081").origin;
 
 // 'unsafe-inline' for scripts is required by the Next.js App Router inline bootstrap script
 // when no nonce is used; a nonce-based CSP is planned for a later iteration (see README).
@@ -12,7 +14,7 @@ const csp = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data:",
   "frame-ancestors 'none'",
-  "form-action 'self' http://localhost:8081",
+  `form-action 'self' ${keycloakOrigin}`,
 ].join("; ");
 
 const securityHeaders = [

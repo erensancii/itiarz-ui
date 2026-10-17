@@ -52,8 +52,10 @@ describe("sealed cookie", () => {
     const sealed = sealCookie({ state: "s", nonce: "n" }, 600);
     expect(sealed).not.toContain("state");
     expect(unsealCookie(sealed)).toEqual({ state: "s", nonce: "n" });
-    const last = sealed.at(-1) === "A" ? "B" : "A";
-    expect(unsealCookie(sealed.slice(0, -1) + last)).toBeNull();
+    // Flip a character in the middle (the last base64url char may only carry padding bits).
+    const mid = Math.floor(sealed.length / 2);
+    const flipped = sealed.slice(0, mid) + (sealed[mid] === "A" ? "B" : "A") + sealed.slice(mid + 1);
+    expect(unsealCookie(flipped)).toBeNull();
     expect(unsealCookie("garbage")).toBeNull();
   });
 

@@ -1,7 +1,8 @@
 import RedisMock from "ioredis-mock";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { GET, POST } from "../app/api/proxy/[...path]/route";
-import { createSession, getSession, setRedisClient } from "../lib/session";
+import { createSession, getSession, setRedisClient, updateSession } from "../lib/session";
+import { formBody, json, urlOf } from "./helpers";
 
 const redis = new RedisMock();
 const APP = "http://localhost:3000";
@@ -37,7 +38,8 @@ describe("/api/proxy/[...path]", () => {
     expect(res.headers.get("content-type")).toContain("application/problem+json");
     const body = await res.json();
     expect(body.status).toBe(401);
-    expect(body.code).toBeTruthy();
+    expect(body.code).toBe("UNAUTHENTICATED");
+    expect(body.detail).toBe("Oturumunuzun süresi doldu. Lütfen yeniden giriş yapın.");
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
@@ -120,6 +122,66 @@ describe("/api/proxy/[...path]", () => {
     expect(s?.accessToken).toBe("access-new");
     expect(s?.refreshToken).toBe("refresh-new");
     expect(s?.idToken).toBe("id-123");
+  });
+
+  it("refreshes only once for concurrent requests (refresh tokens are single use)", async () => {
+    const used = new Set<string>();
+    let refreshCalls = 0;
+    fetchMock.mockImplementation(async (input: string | URL | Request, init?: RequestInit) => {
+      const url = urlOf(input);
+      if (url.includes("/protocol/openid-connect/token")) {
+        refreshCalls++;
+        const rt = (await formBody(init)).get("refresh_token")!;
+        await new Promise((r) => setTimeout(r, 50));
+        if (used.has(rt)) return json({ error: "invalid_grant", error_description: "Stale token" }, 400);
+        used.add(rt);
+        return json({ access_token: `access-after-${rt}`, refresh_token: `${rt}-next`, token_type: "Bearer", expires_in: 300 });
+      }
+      return json({ ok: true });
+    });
+    const sid = await newSession(5_000);
+    const call = () => GET(new Request(`${APP}/api/proxy/me`, { headers: { cookie: `itiarz_sid=${sid}` } }), ctx("me"));
+    const [a, b] = await Promise.all([call(), call()]);
+    expect(a.status).toBe(200);
+    expect(b.status).toBe(200);
+    expect(refreshCalls).toBe(1);
+    const apiAuth = fetchMock.mock.calls
+      .filter((c) => urlOf(c[0] as string).startsWith("http://api:8080"))
+      .map((c) => new Headers((c[1] as RequestInit).headers).get("authorization"));
+    expect(apiAuth).toEqual(["Bearer access-after-refresh-123", "Bearer access-after-refresh-123"]);
+    const s = await getSession(sid);
+    expect(s?.refreshToken).toBe("refresh-123-next");
+    expect(await redis.get(`session-refresh:${sid}`)).toBeNull();
+  });
+
+  it("destroys the session and answers 401 when the refresh fails", async () => {
+    fetchMock.mockImplementation(async (input: string | URL | Request) =>
+      urlOf(input).includes("/protocol/openid-connect/token")
+        ? json({ error: "invalid_grant", error_description: "Session not active" }, 400)
+        : json({ ok: true }));
+    const sid = await newSession(5_000);
+    const res = await GET(new Request(`${APP}/api/proxy/me`, { headers: { cookie: `itiarz_sid=${sid}` } }), ctx("me"));
+    expect(res.status).toBe(401);
+    expect(res.headers.get("content-type")).toContain("application/problem+json");
+    expect(await getSession(sid)).toBeNull();
+    expect(fetchMock.mock.calls.some((c) => urlOf(c[0] as string).startsWith("http://api:8080"))).toBe(false);
+  });
+
+  it("does not destroy a session that another request already refreshed", async () => {
+    const sid = await newSession(5_000);
+    fetchMock.mockImplementation(async (input: string | URL | Request) => {
+      if (urlOf(input).includes("/protocol/openid-connect/token")) {
+        // Simulate a concurrent winner that rotated the token while this refresh was in flight.
+        await updateSession(sid, { refreshToken: "rotated-by-other", accessToken: "access-other", expiresAt: Date.now() + 300_000 });
+        return json({ error: "invalid_grant" }, 400);
+      }
+      return json({ ok: true });
+    });
+    const res = await GET(new Request(`${APP}/api/proxy/me`, { headers: { cookie: `itiarz_sid=${sid}` } }), ctx("me"));
+    expect(res.status).toBe(200);
+    const apiCall = fetchMock.mock.calls.find((c) => urlOf(c[0] as string).startsWith("http://api:8080"));
+    expect(new Headers((apiCall![1] as RequestInit).headers).get("authorization")).toBe("Bearer access-other");
+    expect((await getSession(sid))?.refreshToken).toBe("rotated-by-other");
   });
 
   it("rejects cross-origin mutations with 403 before calling the backend", async () => {

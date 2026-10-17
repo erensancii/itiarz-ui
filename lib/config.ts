@@ -12,6 +12,7 @@ export type AppConfig = {
   apiInternalUrl: string;
   redisUrl: string;
   cookieSecure: boolean;
+  trustProxy: boolean; // honour X-Forwarded-For / X-Real-IP (only behind a proxy that overwrites them)
   sessionSecret: string;
 };
 
@@ -48,7 +49,13 @@ export function getConfig(): AppConfig {
     apiInternalUrl: trimSlash(env.API_INTERNAL_URL!),
     redisUrl: env.REDIS_URL!,
     cookieSecure: env.COOKIE_SECURE === "true",
+    trustProxy: env.TRUST_PROXY === "true",
     sessionSecret: env.SESSION_SECRET!,
   };
   return cached;
+}
+
+/** Test seam: forget the memoized configuration so changed env vars are read again. */
+export function resetConfig(): void {
+  cached = null;
 }

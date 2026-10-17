@@ -1,24 +1,35 @@
 import { appRedirect, rateLimited, SLUG_PATTERN, startAuthorization, tooManyRequests } from "../../../lib/auth-flow";
-import { problem } from "../../../lib/backend";
+import { csrfRejected, problem } from "../../../lib/backend";
+import { getConfig } from "../../../lib/config";
+import { isSameOrigin } from "../../../lib/csrf";
 import { getSession, readCookie, SESSION_COOKIE } from "../../../lib/session";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+async function readSlug(req: Request): Promise<string> {
+  try {
+    const value = (await req.formData()).get("slug");
+    return typeof value === "string" ? value : "";
+  } catch {
+    return "";
+  }
+}
+
 /**
- * /auth/switch-tenant?slug=<org> — re-authorizes with `organization:<slug>` scope.
- * First attempt uses prompt=none (Keycloak SSO session, no password); if Keycloak answers
- * `login_required`, the callback sends the user back here with `interactive=1` (no prompt).
+ * POST /auth/switch-tenant (form field `slug`; Origin must match APP_URL) — re-authorizes with
+ * the `organization:<slug>` scope and prompt=none (Keycloak SSO session, no password). If
+ * Keycloak answers `login_required`, the callback restarts the switch interactively.
  */
-export async function GET(req: Request) {
+export async function POST(req: Request) {
+  if (!isSameOrigin(req, getConfig().appUrl)) return csrfRejected();
   if (await rateLimited(req)) return tooManyRequests();
-  const params = new URL(req.url).searchParams;
-  const slug = params.get("slug") ?? "";
+  const slug = await readSlug(req);
   if (!SLUG_PATTERN.test(slug)) {
-    return problem(400, "Bad Request", "INVALID_TENANT_SLUG", "Geçersiz şirket kısa adı.");
+    return problem(400, "Şirket bulunamadı", "INVALID_TENANT_SLUG",
+      "Seçilen şirket tanınamadı. Şirket listesinden yeniden seçim yapın.");
   }
   const session = await getSession(readCookie(req, SESSION_COOKIE));
-  if (!session) return appRedirect("/auth/login");
-  const interactive = params.get("interactive") === "1";
-  return startAuthorization({ mode: "switch", slug, prompt: interactive ? undefined : "none" });
+  if (!session) return appRedirect("/auth/login", 303);
+  return startAuthorization({ mode: "switch", slug, prompt: "none" }, 303);
 }

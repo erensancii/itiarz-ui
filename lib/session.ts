@@ -20,7 +20,7 @@ export const OIDC_COOKIE_TTL_SECONDS = 600;
 
 const SESSION_ID_PATTERN = /^[A-Za-z0-9_-]{43}$/;
 
-type RedisLike = Pick<Redis, "set" | "get" | "del" | "pttl" | "incr" | "expire">;
+type RedisLike = Pick<Redis, "set" | "get" | "del" | "pttl" | "multi">;
 
 let redis: RedisLike | null = null;
 

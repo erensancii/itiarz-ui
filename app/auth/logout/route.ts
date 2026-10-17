@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { appRedirect } from "../../../lib/auth-flow";
-import { problem } from "../../../lib/backend";
+import { csrfRejected } from "../../../lib/backend";
 import { getConfig } from "../../../lib/config";
 import { isSameOrigin } from "../../../lib/csrf";
 import { endSessionUrl } from "../../../lib/oidc";
@@ -15,9 +15,7 @@ export const dynamic = "force-dynamic";
  * end_session_endpoint with id_token_hint, which redirects back to APP_URL/.
  */
 export async function POST(req: Request) {
-  if (!isSameOrigin(req, getConfig().appUrl)) {
-    return problem(403, "Forbidden", "CSRF_ORIGIN_MISMATCH", "İstek kaynağı doğrulanamadı.");
-  }
+  if (!isSameOrigin(req, getConfig().appUrl)) return csrfRejected();
   const session = await getSession(readCookie(req, SESSION_COOKIE));
   const res = session ? NextResponse.redirect(endSessionUrl(session.idToken), 303) : appRedirect("/", 303);
   if (session) await destroySession(session.id);

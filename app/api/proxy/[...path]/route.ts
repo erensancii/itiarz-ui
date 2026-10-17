@@ -1,4 +1,4 @@
-import { backendFetch, problem, unauthenticated } from "../../../../lib/backend";
+import { backendFetch, csrfRejected, problem, unauthenticated } from "../../../../lib/backend";
 import { getConfig } from "../../../../lib/config";
 import { isSameOrigin } from "../../../../lib/csrf";
 import { getSession, readCookie, SESSION_COOKIE } from "../../../../lib/session";
@@ -43,11 +43,12 @@ async function proxy(req: Request, context: RouteContext): Promise<Response> {
   const { path } = await context.params;
   const segments = safeSegments(path ?? []);
   if (!segments || RAW_TRAVERSAL.test(rawSuffix)) {
-    return problem(400, "Bad Request", "INVALID_PATH", "Geçersiz API yolu.");
+    return problem(400, "Geçersiz istek", "INVALID_PATH",
+      "Geçersiz istek adresi. Sayfayı yenileyip tekrar deneyin; sorun sürerse destek ekibine bildirin.");
   }
 
   if (!isSameOrigin(req, config.appUrl)) {
-    return problem(403, "Forbidden", "CSRF_ORIGIN_MISMATCH", "İstek kaynağı doğrulanamadı.");
+    return csrfRejected();
   }
 
   const session = await getSession(readCookie(req, SESSION_COOKIE));

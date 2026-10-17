@@ -1,5 +1,5 @@
 import type { NextResponse } from "next/server";
-import { appRedirect, rateLimited, tooManyRequests, type PendingAuth } from "../../../lib/auth-flow";
+import { appRedirect, organizationsOf, startAuthorization, type PendingAuth } from "../../../lib/auth-flow";
 import { exchangeCode, redirectUri } from "../../../lib/oidc";
 import {
   createSession, destroySession, OIDC_COOKIE, oidcCookieOptions, readCookie, SESSION_COOKIE, sessionCookieOptions, unsealCookie,
@@ -17,20 +17,21 @@ function fail(code: string): NextResponse {
   return clearOidcCookie(appRedirect(`/?auth_error=${encodeURIComponent(code)}`));
 }
 
-/** Keycloak redirect target: validates state, exchanges the code, checks nonce, creates the session. */
+/**
+ * Keycloak redirect target: validates state, exchanges the code, checks nonce, creates the session.
+ * Not rate limited: without the sealed itiarz_oidc cookie and its matching state it does nothing.
+ */
 export async function GET(req: Request) {
-  if (await rateLimited(req)) return tooManyRequests();
-
   const pending = unsealCookie<PendingAuth>(readCookie(req, OIDC_COOKIE));
   if (!pending) return fail("login_state_missing");
 
   const incoming = new URL(req.url);
   const error = incoming.searchParams.get("error");
   if (error) {
-    // Silent tenant switch needs an interactive login: retry the switch without prompt=none.
+    // Silent tenant switch needs an interactive login: restart the switch without prompt=none.
     if (error === "login_required" && pending.mode === "switch" && pending.prompt === "none" && pending.slug
         && incoming.searchParams.get("state") === pending.state) {
-      return clearOidcCookie(appRedirect(`/auth/switch-tenant?slug=${encodeURIComponent(pending.slug)}&interactive=1`));
+      return startAuthorization({ mode: "switch", slug: pending.slug });
     }
     return fail(/^[a-z_]{1,64}$/.test(error) ? error : "authorization_failed");
   }
@@ -48,6 +49,12 @@ export async function GET(req: Request) {
     return fail("token_exchange_failed");
   }
 
+  // The active tenant is what the token actually carries (the backend accepts exactly one
+  // organization), not what was requested.
+  const orgs = organizationsOf(tokens.accessToken);
+  const tokenTenant = orgs.length === 1 ? orgs[0] : null;
+  const tenantSlug = pending.mode === "switch" ? (tokenTenant === pending.slug ? tokenTenant : null) : tokenTenant;
+
   // Always issue a fresh session id after (re-)authentication; drop the previous one.
   const previous = readCookie(req, SESSION_COOKIE);
   if (previous) await destroySession(previous);
@@ -56,10 +63,11 @@ export async function GET(req: Request) {
     refreshToken: tokens.refreshToken,
     idToken: tokens.idToken,
     expiresAt: tokens.expiresAt,
-    tenantSlug: pending.mode === "switch" ? pending.slug ?? null : null,
+    tenantSlug,
   });
 
-  const res = clearOidcCookie(appRedirect("/"));
+  const target = pending.mode === "switch" && !tenantSlug ? "/select-tenant?auth_error=tenant_unavailable" : "/";
+  const res = clearOidcCookie(appRedirect(target));
   res.cookies.set(SESSION_COOKIE, sid, sessionCookieOptions());
   return res;
 }
