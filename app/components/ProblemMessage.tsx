@@ -4,9 +4,9 @@ import { useRouter } from "next/navigation";
 import { describeProblem, type Problem } from "../../lib/problem";
 
 /** Turkish problem text with the next step and the trace id shown as "Destek kodu". */
-export function ProblemMessage({ problem, onDismiss }: { problem: Problem; onDismiss?: () => void }) {
+export function ProblemMessage({ problem, onDismiss, context }: { problem: Problem; onDismiss?: () => void; context?: "case" | "admin" }) {
   const router = useRouter();
-  const d = describeProblem(problem);
+  const d = describeProblem(problem, context);
   return (
     <div className="problem" role="alert">
       <p className="problem-title">{d.title}</p>

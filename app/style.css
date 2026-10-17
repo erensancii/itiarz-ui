@@ -313,3 +313,33 @@ input[aria-invalid="true"], textarea[aria-invalid="true"] { border-color: var(--
 }
 .assign-form { display: grid; gap: 8px; }
 .assign-form .btn { justify-self: start; }
+
+/* ---------- team, audit, platform ---------- */
+.section { margin-bottom: 16px; }
+.section h2 { font-size: 15px; margin-bottom: 10px; }
+.inline-form { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 12px; }
+.inline-form > .btn { margin-top: 20px; }
+.inline-form > .field { min-width: 200px; }
+.inline-form .form-problem { flex-basis: 100%; }
+.inline-form .field-error { white-space: normal; }
+.success { color: var(--ok); background: var(--ok-soft); padding: 8px 10px; border-radius: var(--radius); }
+.btn-danger { color: var(--urgent); border-color: var(--urgent); background: transparent; }
+.btn-danger:hover { background: var(--urgent-soft); }
+.status-pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 600;
+  color: var(--muted); border: 1px solid var(--line-strong); }
+.status-ACTIVE { color: var(--ok); background: var(--ok-soft); border-color: transparent; }
+.status-INVITED { color: var(--wait); background: var(--wait-soft); border-color: transparent; }
+.status-SUSPENDED { color: var(--urgent); background: var(--urgent-soft); border-color: transparent; }
+.self-tag { margin-left: 8px; }
+.team { min-width: 640px; }
+.team td { vertical-align: top; }
+.member-actions, .tenant-actions { display: grid; gap: 8px; }
+.role-form { display: flex; gap: 8px; align-items: center; }
+.role-form select { width: auto; min-height: 28px; padding: 2px 8px; }
+.target { overflow-wrap: anywhere; max-width: 320px; }
+.pager { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 14px; }
+dialog.confirm { max-width: 440px; width: calc(100% - 32px); padding: 20px; color: var(--ink); background: var(--surface);
+  border: 1px solid var(--line-strong); border-radius: var(--radius); }
+dialog.confirm::backdrop { background: rgba(0, 0, 0, .45); }
+dialog.confirm h2 { font-size: 17px; margin-bottom: 8px; }
+dialog.confirm p { margin-bottom: 14px; }

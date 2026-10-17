@@ -22,7 +22,7 @@ const GENERIC =
   "İşlem şu anda tamamlanamadı. Birkaç dakika sonra tekrar deneyin; sorun sürerse destek koduyla bize ulaşın.";
 
 /** Turkish, non-blaming text with a next step for a problem response (spec §8). */
-export function describeProblem(p: Problem): ProblemDescription {
+export function describeProblem(p: Problem, context: "case" | "admin" = "case"): ProblemDescription {
   const fieldErrors: Record<string, string> = {};
   for (const e of p.errors ?? []) if (e?.field && !(e.field in fieldErrors)) fieldErrors[e.field] = e.message;
   const base = { supportCode: p.traceId, fieldErrors };
@@ -35,7 +35,11 @@ export function describeProblem(p: Problem): ProblemDescription {
     case "CASE_SELF_APPROVAL":
       return { ...base, title: "Onay başka birinden gelmeli",
         message: "Bu dosyayı siz hazırladığınız için onaylayamazsınız. Başka bir Onaylayıcı'dan onay isteyin." };
+    // Outside case screens a 409 is a business conflict whose backend text already says what to do.
     case "CONFLICT":
+      if (context === "admin") {
+        return { ...base, title: "İşlem tamamlanamadı", message: p.detail ?? GENERIC };
+      }
       return { ...base, title: "Dosya güncellendi",
         message: "Bu dosya siz bakarken değişti. Güncel hâli yükleyip tekrar deneyin; yazdıklarınız korunur.", action: "reload" };
     case "EVIDENCE_INCOMPLETE":
@@ -56,6 +60,15 @@ export function describeProblem(p: Problem): ProblemDescription {
         message: "Bu şirketteki üyeliğiniz doğrulanamadı. Lütfen yeniden giriş yapın; şirket hâlâ listede yoksa "
           + "şirket yöneticinizden yeni bir davet isteyin.",
         action: "login" };
+    case "LAST_ADMIN":
+      return { ...base, title: "Son yönetici korunuyor",
+        message: "Şirketin en az bir yöneticisi olmalı. Önce başka birini yönetici yapın." };
+    case "DUPLICATE_INVITE":
+      return { ...base, title: "Zaten davetli",
+        message: "Bu e-posta için zaten bekleyen bir davet veya etkin bir üyelik var. Ekip listesinden kontrol edin." };
+    case "KEYCLOAK_UNAVAILABLE":
+      return { ...base, title: "Kimlik hizmetine ulaşılamadı",
+        message: "Kimlik hizmetine şu an ulaşılamıyor. Birkaç dakika sonra tekrar deneyin." };
     case "INVALID_TRANSITION":
       return { ...base, title: "Bu adım şu an yapılamıyor",
         message: p.detail ?? "Dosyanın durumu bu işleme izin vermiyor. Güncel hâli yükleyip durumu kontrol edin.",
