@@ -40,6 +40,8 @@ export function DataTable<R extends { id: string }>({
         loading={loading}
         autoHeight
         density="compact"
+        // Cells may hold two-line text or an inline field (e.g. role); rows grow to fit.
+        getRowHeight={() => "auto"}
         showToolbar
         disableRowSelectionOnClick
         pageSizeOptions={[...PAGE_SIZES]}
@@ -50,7 +52,7 @@ export function DataTable<R extends { id: string }>({
         slots={{ noRowsOverlay: NoRows, noResultsOverlay: NoRows }}
         slotProps={{ toolbar: { showQuickFilter: true } }}
         onRowClick={getRowHref ? (params) => router.push(getRowHref(params.row as R)) : undefined}
-        sx={getRowHref ? { "& .MuiDataGrid-row": { cursor: "pointer" }, border: 0 } : { border: 0 }}
+        sx={{ border: 0, "& .MuiDataGrid-cell": { py: 0.75, display: "flex", alignItems: "center" }, ...(getRowHref ? { "& .MuiDataGrid-row": { cursor: "pointer" } } : {}) }}
         {...(server
           ? {
               paginationMode: "server" as const,

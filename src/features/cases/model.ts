@@ -1,5 +1,10 @@
 /** Pure case helpers shared by server and client components (labels, transitions, deadlines). */
 
+import type { Member } from "@/shared/members";
+
+export type { Member };
+export { formatDateTime } from "@/shared/format";
+
 export type CaseStatus = "Open" | "InProgress" | "Ready" | "Submitted" | "Won" | "Lost";
 export type CaseReason = "NotReceived" | "Fraud" | "Duplicate" | "Cancelled" | "Other";
 export type UserRef = { id: string; email: string };
@@ -35,15 +40,6 @@ export type CaseDetail = CaseSummary & {
   transitions: Transition[];
 };
 
-/** GET /api/members row; userId is null until the invitation is accepted. */
-export type Member = {
-  id: string;
-  userId: string | null;
-  email: string;
-  displayName: string | null;
-  role: string;
-  status: string;
-};
 
 /** Members a case can be assigned to: active and linked to a user. Roles are left to the backend (422). */
 export function assignableMembers(members: readonly Member[]): (Member & { userId: string })[] {
@@ -170,13 +166,6 @@ export function formatMoney(amount: number, currency: string): string {
   }
 }
 
-const DATE_TIME = new Intl.DateTimeFormat("tr-TR", {
-  day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Istanbul",
-});
-
-export function formatDateTime(iso: string): string {
-  return DATE_TIME.format(new Date(iso));
-}
 
 /** POST /api/cases body. */
 export type NewCaseInput = {
