@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { actionLabel, ACTION_LABELS, targetLabel } from "../lib/audit";
-import { suggestSlug } from "../lib/platform";
-import { describeProblem } from "../lib/problem";
+import { actionLabel, ACTION_LABELS, targetLabel } from "@/features/audit/model";
+import { suggestSlug } from "@/features/platform/model";
+import { describeProblem } from "@/shared/api/problem";
 
 describe("actionLabel", () => {
   it("has a Turkish label for every backend action key", () => {
@@ -56,7 +56,7 @@ describe("LAST_ADMIN problem", () => {
   });
 });
 
-import { isEmail, memberStatusLabel } from "../lib/team";
+import { isEmail, memberStatusLabel } from "@/features/team/model";
 describe("team helpers", () => {
   it("labels statuses and falls back to the raw value", () => {
     expect(memberStatusLabel("INVITED")).toBe("Davet bekliyor");

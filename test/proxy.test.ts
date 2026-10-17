@@ -1,7 +1,7 @@
 import RedisMock from "ioredis-mock";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { GET, POST } from "../app/api/proxy/[...path]/route";
-import { createSession, getSession, setRedisClient, updateSession } from "../lib/session";
+import { GET, POST } from "@/app/api/proxy/[...path]/route";
+import { createSession, getSession, setRedisClient, updateSession } from "@/server/session";
 import { formBody, json, urlOf } from "./helpers";
 
 const redis = new RedisMock();

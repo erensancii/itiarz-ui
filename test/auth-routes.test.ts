@@ -1,12 +1,12 @@
 import RedisMock from "ioredis-mock";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { GET as callback } from "../app/auth/callback/route";
-import { POST as logout } from "../app/auth/logout/route";
-import { POST as switchTenant } from "../app/auth/switch-tenant/route";
-import type { PendingAuth } from "../lib/auth-flow";
+import { GET as callback } from "@/app/auth/callback/route";
+import { POST as logout } from "@/app/auth/logout/route";
+import { POST as switchTenant } from "@/app/auth/switch-tenant/route";
+import type { PendingAuth } from "@/server/auth-flow";
 import {
   createSession, getSession, OIDC_COOKIE, sealCookie, SESSION_COOKIE, setRedisClient, unsealCookie,
-} from "../lib/session";
+} from "@/server/session";
 import { accessToken, idToken, json, urlOf } from "./helpers";
 
 const redis = new RedisMock();

@@ -21,7 +21,22 @@
       {
         "name": "next"
       }
-    ]
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "@/app/*": [
+        "src/app/*"
+      ],
+      "@/features/*": [
+        "src/features/*"
+      ],
+      "@/shared/*": [
+        "src/shared/*"
+      ],
+      "@/server/*": [
+        "src/server/*"
+      ]
+    }
   },
   "include": [
     "next-env.d.ts",

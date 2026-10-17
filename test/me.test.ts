@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { autoSwitchTarget, can, isSelectable, SUSPENDED_TENANT_NOTE, type Me, type TenantView } from "../lib/me";
+import { autoSwitchTarget, can, isSelectable, SUSPENDED_TENANT_NOTE, type Me, type TenantView } from "@/shared/auth/me";
 
 const acme: TenantView = { slug: "acme", name: "Acme Ticaret", role: "ANALYST", status: "ACTIVE" };
 

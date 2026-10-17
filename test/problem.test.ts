@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { describeAuthError, describeProblem, readProblem } from "../lib/problem";
+import { describeAuthError, describeProblem, readProblem } from "@/shared/api/problem";
 
 describe("describeProblem", () => {
   it("uses the exact self-approval text", () => {

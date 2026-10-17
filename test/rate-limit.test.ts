@@ -1,8 +1,8 @@
 import RedisMock from "ioredis-mock";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { resetConfig } from "../lib/config";
-import { authRateLimitAllowed, clientIp, hit } from "../lib/rate-limit";
-import { setRedisClient } from "../lib/session";
+import { resetConfig } from "@/server/config";
+import { authRateLimitAllowed, clientIp, hit } from "@/server/rate-limit";
+import { setRedisClient } from "@/server/session";
 
 const redis = new RedisMock();
 

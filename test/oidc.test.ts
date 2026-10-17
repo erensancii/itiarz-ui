@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildAuthorizationUrl, endSessionUrl, serverMetadata } from "../lib/oidc";
+import { buildAuthorizationUrl, endSessionUrl, serverMetadata } from "@/server/oidc";
 
 describe("oidc", () => {
   it("builds metadata by hand: public browser endpoints, internal back-channel endpoints", () => {

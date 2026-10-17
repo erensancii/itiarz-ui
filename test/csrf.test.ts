@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isSameOrigin } from "../lib/csrf";
+import { isSameOrigin } from "@/server/csrf";
 
 const APP = "http://localhost:3000";
 

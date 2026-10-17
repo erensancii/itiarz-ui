@@ -13,7 +13,8 @@
     "next": "^16.2.0",
     "openid-client": "^6.8.8",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "server-only": "^0.0.1"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

@@ -2,7 +2,7 @@ import RedisMock from "ioredis-mock";
 import { beforeEach, describe, expect, it } from "vitest";
 import {
   createSession, destroySession, getSession, sealCookie, setRedisClient, unsealCookie, updateSession, SESSION_TTL_SECONDS,
-} from "../lib/session";
+} from "@/server/session";
 
 const redis = new RedisMock();
 

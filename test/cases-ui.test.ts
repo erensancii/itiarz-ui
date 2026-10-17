@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { assignableMembers, nextEvidenceKind, availableTransitions, deadlineState, formatRemaining, sortByDeadline } from "../lib/cases";
+import { assignableMembers, nextEvidenceKind, availableTransitions, deadlineState, formatRemaining, sortByDeadline } from "@/features/cases/model";
 
 const H = 3_600_000;
 const now = Date.parse("2026-10-17T12:00:00Z");
