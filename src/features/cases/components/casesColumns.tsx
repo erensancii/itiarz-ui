@@ -1,6 +1,10 @@
+"use client";
+
 import Box from "@mui/material/Box";
+import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
 import type { GridColDef } from "@mui/x-data-grid";
+import NextLink from "next/link";
 import {
   deadlineState, evidenceLabel, formatDateTime, formatMoney, formatRemaining, REASON_LABELS, STATUS_LABELS,
   type CaseSummary,
@@ -14,7 +18,18 @@ import { StatusChip } from "./StatusChip";
 export function casesColumns(now = Date.now()): GridColDef<CaseSummary>[] {
   return [
     { field: "provider", headerName: "Sağlayıcı", minWidth: 110, flex: 0.7 },
-    { field: "providerCaseId", headerName: "İtiraz no", minWidth: 140, flex: 1 },
+    {
+      field: "providerCaseId",
+      headerName: "İtiraz no",
+      minWidth: 140,
+      flex: 1,
+      // A real link keeps keyboard, screen-reader and open-in-new-tab access (row click is mouse-only).
+      renderCell: ({ row }) => (
+        <Link component={NextLink} href={`/cases/${row.id}`} underline="hover" sx={{ fontWeight: 600 }}>
+          {row.providerCaseId}
+        </Link>
+      ),
+    },
     { field: "orderId", headerName: "Sipariş", minWidth: 110, flex: 0.8 },
     {
       field: "reason",

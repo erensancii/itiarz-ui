@@ -1,1 +1,1 @@
-export { DataTable, type DataTableProps } from "./DataTable";
+export { DataTable, keepKeysInCellControls, type DataTableProps } from "./DataTable";

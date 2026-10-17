@@ -1,10 +1,21 @@
 "use client";
 
 import Paper from "@mui/material/Paper";
-import { DataGrid, type GridColDef, type GridSortModel } from "@mui/x-data-grid";
+import { DataGrid, type GridCellParams, type GridColDef, type GridSortModel, type MuiEvent } from "@mui/x-data-grid";
+import type { KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 import { EmptyState } from "@/shared/components/EmptyState";
 import { DEFAULT_PAGE_SIZE, PAGE_SIZES, pagingHref } from "@/shared/paging";
+
+/**
+ * Keys typed into a control inside a cell (inline dropdown, button, link) belong to that control.
+ * Without this the grid keyboard navigation takes Arrow/Space/Home/End and moves focus away.
+ */
+export function keepKeysInCellControls(_params: GridCellParams, event: MuiEvent<KeyboardEvent>) {
+  if ((event.target as HTMLElement).closest("input, textarea, button, a, [role=combobox]")) event.defaultMuiPrevented = true;
+}
+
+const NoMatches = () => <EmptyState title="Aramanızla eşleşen kayıt yok." description="Arama metnini veya filtreleri değiştirin." />;
 
 export type DataTableProps<R extends { id: string }> = {
   rows: R[];
@@ -49,8 +60,11 @@ export function DataTable<R extends { id: string }>({
           sorting: initialSort ? { sortModel: initialSort } : undefined,
           pagination: server ? undefined : { paginationModel: { page: 0, pageSize: DEFAULT_PAGE_SIZE } },
         }}
-        slots={{ noRowsOverlay: NoRows, noResultsOverlay: NoRows }}
-        slotProps={{ toolbar: { showQuickFilter: true } }}
+        slots={{ noRowsOverlay: NoRows, noResultsOverlay: NoMatches }}
+        // Server paging: search and filters would only see the current page, so they are not offered.
+        slotProps={{ toolbar: { showQuickFilter: !server } }}
+        disableColumnFilter={!!server}
+        onCellKeyDown={keepKeysInCellControls}
         onRowClick={getRowHref ? (params) => router.push(getRowHref(params.row as R)) : undefined}
         sx={{ border: 0, "& .MuiDataGrid-cell": { py: 0.75, display: "flex", alignItems: "center" }, ...(getRowHref ? { "& .MuiDataGrid-row": { cursor: "pointer" } } : {}) }}
         {...(server
