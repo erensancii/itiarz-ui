@@ -19,6 +19,11 @@ export type TenantCreated = {
   inviteSent: boolean;
 };
 
+export const TENANT_STATUS_LABELS: Record<string, string> = { ACTIVE: "Etkin", SUSPENDED: "Askıda" };
+
+export const tenantStatusLabel = (status: string) =>
+  Object.prototype.hasOwnProperty.call(TENANT_STATUS_LABELS, status) ? TENANT_STATUS_LABELS[status]! : status;
+
 const TR: Record<string, string> = { ç: "c", ğ: "g", ı: "i", ö: "o", ş: "s", ü: "u" };
 
 /** Suggests a tenant slug from its name: lower-case a-z0-9 and single dashes, at most 63 chars. */
