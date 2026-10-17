@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
   availableTransitions, deadlineState, evidenceLabel, formatDateTime, formatMoney, formatRemaining, REASON_LABELS,
-  STATUS_LABELS, type CaseDetail,
+  STATUS_LABELS, assignableMembers, type CaseDetail, type Member,
 } from "../../../../lib/cases";
 import { can } from "../../../../lib/me";
 import { apiGet, requireMe } from "../../../../lib/server-api";
@@ -51,6 +51,9 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ id:
     );
   }
   const c = result.data;
+  // Sequential on purpose (after /api/me and the case); a failure only hides the member picker.
+  const membersResult = can(me, "case:assign") && can(me, "member:read") ? await apiGet<Member[]>("/api/members") : null;
+  const members = membersResult?.ok ? assignableMembers(membersResult.data) : null;
   const now = Date.now();
   const state = deadlineState(c.deadlineUtc, c.status, now);
   const transitions = availableTransitions(c.status, me.permissions);
@@ -134,7 +137,8 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ id:
             <section className="panel" aria-labelledby="assign-h">
               <h2 id="assign-h">Atama</h2>
               <AssigneeControl caseId={c.id} assignee={c.assignee} myId={me.user.id}
-                canTakeCase={can(me, "case:write")} />
+                canTakeCase={can(me, "case:write")}
+                members={members?.map((m) => ({ userId: m.userId, email: m.email, displayName: m.displayName })) ?? null} />
             </section>
           )}
           <section className="panel" aria-labelledby="history-h">

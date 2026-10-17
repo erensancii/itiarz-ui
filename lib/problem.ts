@@ -37,24 +37,28 @@ export function describeProblem(p: Problem): ProblemDescription {
         message: "Bu dosyayı siz hazırladığınız için onaylayamazsınız. Başka bir Onaylayıcı'dan onay isteyin." };
     case "CONFLICT":
       return { ...base, title: "Dosya güncellendi",
-        message: "Bu dosya siz bakarken değişti. Sayfayı yenileyip güncel hâli üzerinden tekrar deneyin.", action: "reload" };
+        message: "Bu dosya siz bakarken değişti. Güncel hâli yükleyip tekrar deneyin; yazdıklarınız korunur.", action: "reload" };
     case "EVIDENCE_INCOMPLETE":
       return { ...base, title: "Kanıtlar eksik",
         message: "Zorunlu kanıtlar tamamlanmadan dosya hazır olarak işaretlenemez. Eksik kanıtları ekleyip tekrar deneyin." };
     case "TENANT_NOT_SELECTED":
       return { ...base, title: "Şirket seçilmedi",
         message: "Devam etmek için çalışacağınız şirketi seçin.", action: "select-tenant" };
+    // A token that still carries this company is rejected on every call (even /api/me), so the way
+    // out is a fresh login: it carries no company and the user can pick another one.
     case "TENANT_SUSPENDED":
       return { ...base, title: "Şirket hesabı askıda",
-        message: "Bu şirketin hesabı şu anda askıda. Başka bir şirket seçin veya platform yöneticisiyle iletişime geçin.",
-        action: "select-tenant" };
+        message: "Bu şirketin hesabı şu anda askıda. Başka bir şirketle çalışmak için yeniden giriş yapıp şirket seçin; "
+          + "bu şirket için platform yöneticisiyle iletişime geçin.",
+        action: "login" };
     case "NO_MEMBERSHIP":
       return { ...base, title: "Üyelik doğrulanamadı",
-        message: "Bu şirketteki üyeliğiniz doğrulanamadı. Sayfayı yenileyin; sorun sürerse şirket yöneticinizden davet isteyin.",
-        action: "reload" };
+        message: "Bu şirketteki üyeliğiniz doğrulanamadı. Lütfen yeniden giriş yapın; şirket hâlâ listede yoksa "
+          + "şirket yöneticinizden yeni bir davet isteyin.",
+        action: "login" };
     case "INVALID_TRANSITION":
       return { ...base, title: "Bu adım şu an yapılamıyor",
-        message: p.detail ?? "Dosyanın durumu bu işleme izin vermiyor. Sayfayı yenileyip güncel durumu kontrol edin.",
+        message: p.detail ?? "Dosyanın durumu bu işleme izin vermiyor. Güncel hâli yükleyip durumu kontrol edin.",
         action: "reload" };
   }
   if (p.status === 403) {
@@ -70,9 +74,28 @@ export function describeProblem(p: Problem): ProblemDescription {
       message: p.detail ?? "Bazı alanlar eksik veya hatalı. İşaretli alanları düzeltip tekrar deneyin." };
   }
   if (p.status >= 400 && p.status < 500 && p.detail) {
-    return { ...base, title: p.title ?? "İşlem tamamlanamadı", message: p.detail };
+    return { ...base, title: "İşlem tamamlanamadı", message: p.detail };
   }
   return { ...base, title: "İşlem tamamlanamadı", message: GENERIC };
+}
+
+const AUTH_ERRORS: Record<string, string> = {
+  login_state_missing:
+    "Giriş işlemi zaman aşımına uğradı veya başka bir sekmede yeniden başlatıldı. Girişi bu sekmeden yeniden başlatın.",
+  token_exchange_failed: "Giriş doğrulanamadı. Birkaç saniye sonra yeniden giriş yapmayı deneyin.",
+  access_denied: "Giriş iptal edildi. Devam etmek için yeniden giriş yapın.",
+  authorization_failed: "Giriş sırasında kimlik sağlayıcı bir hata bildirdi. Yeniden giriş yapmayı deneyin.",
+  login_required: "Oturumunuz kapanmış. Devam etmek için yeniden giriş yapın.",
+};
+
+/**
+ * Text for /?auth_error=<code> from the login callback. Only known codes are shown back as the
+ * support code; any other value is attacker-controllable URL input and is never echoed.
+ */
+export function describeAuthError(code: string): { message: string; supportCode?: string } {
+  const message = Object.prototype.hasOwnProperty.call(AUTH_ERRORS, code) ? AUTH_ERRORS[code] : undefined;
+  if (message) return { message, supportCode: code };
+  return { message: "Giriş sırasında bir sorun oluştu. Yeniden giriş yapmayı deneyin; sorun sürerse destek ekibine başvurun." };
 }
 
 /** Reads a problem body from an error response; tolerates non-JSON bodies (e.g. a proxy HTML page). */

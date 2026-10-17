@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { availableTransitions, deadlineState, formatRemaining, sortByDeadline } from "../lib/cases";
+import { assignableMembers, nextEvidenceKind, availableTransitions, deadlineState, formatRemaining, sortByDeadline } from "../lib/cases";
 
 const H = 3_600_000;
 const now = Date.parse("2026-10-17T12:00:00Z");
@@ -72,5 +72,27 @@ describe("sortByDeadline", () => {
     const list = [{ deadlineUtc: "2026-10-20T00:00:00Z" }, { deadlineUtc: "2026-10-18T00:00:00Z" }];
     expect(sortByDeadline(list).map((c) => c.deadlineUtc)).toEqual(["2026-10-18T00:00:00Z", "2026-10-20T00:00:00Z"]);
     expect(list[0].deadlineUtc).toBe("2026-10-20T00:00:00Z");
+  });
+});
+
+describe("nextEvidenceKind", () => {
+  it("moves to the next missing kind after an add", () => {
+    expect(nextEvidenceKind(["PaymentRecord", "DeliveryProof"], "PaymentRecord")).toBe("DeliveryProof");
+  });
+  it("keeps the added kind when nothing else is missing", () => {
+    expect(nextEvidenceKind(["3DSRecord"], "3DSRecord")).toBe("3DSRecord");
+    expect(nextEvidenceKind([], "RefundRecord")).toBe("RefundRecord");
+  });
+});
+
+describe("assignableMembers", () => {
+  it("keeps only ACTIVE members with a user id, sorted by email, without looking at roles", () => {
+    const list = assignableMembers([
+      { id: "m1", userId: "u1", email: "zeynep@acme.local", displayName: null, role: "VIEWER", status: "ACTIVE" },
+      { id: "m2", userId: null, email: "yeni@acme.local", displayName: null, role: "ANALYST", status: "INVITED" },
+      { id: "m3", userId: "u3", email: "ali@acme.local", displayName: "Ali", role: "ANALYST", status: "ACTIVE" },
+      { id: "m4", userId: "u4", email: "eski@acme.local", displayName: null, role: "ANALYST", status: "REMOVED" },
+    ]);
+    expect(list.map((m) => m.userId)).toEqual(["u3", "u1"]);
   });
 });

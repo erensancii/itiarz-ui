@@ -36,19 +36,25 @@ export function can(me: Me | null | undefined, permission: string): boolean {
 export type MeResult =
   | { kind: "ok"; me: Me; session: Session }
   | { kind: "anonymous" }
+  | { kind: "expired" }
   | { kind: "error"; problem: Problem };
 
 /**
  * Loads the signed-in user's /api/me once per server request (React cache), so the layout and
  * the page share one call. Pages await this before any other backend call: right after an
  * invitation is accepted, parallel first requests can transiently fail with NO_MEMBERSHIP.
+ *
+ * "anonymous" (no session) may be redirected to /auth/login automatically. "expired" (a session
+ * existed but the backend answered 401; backendFetch has destroyed it) must NOT be redirected:
+ * Keycloak SSO would log in silently and, if /api/me keeps failing, / → /auth/login → / loops.
+ * Pages show a message with a "Yeniden giriş yap" button instead.
  */
 export const loadMe = cache(async (): Promise<MeResult> => {
   const jar = await cookies();
   const session = await getSession(jar.get(SESSION_COOKIE)?.value);
   if (!session) return { kind: "anonymous" };
   const res = await backendFetch(session, "/api/me");
-  if (res.status === 401) return { kind: "anonymous" };
+  if (res.status === 401) return { kind: "expired" };
   if (!res.ok) return { kind: "error", problem: await readProblem(res) };
   return { kind: "ok", me: (await res.json()) as Me, session };
 });

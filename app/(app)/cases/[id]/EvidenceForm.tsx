@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { EVIDENCE_LABELS, type CaseStatus } from "../../../../lib/cases";
+import { EVIDENCE_LABELS, nextEvidenceKind, type CaseStatus } from "../../../../lib/cases";
 import { useApiAction } from "../../../../lib/client-api";
 import { ProblemMessage } from "../../../components/ProblemMessage";
 
@@ -14,7 +14,10 @@ export function EvidenceForm({ caseId, missing, status }: { caseId: string; miss
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     const ok = await run(`cases/${caseId}/evidence`, "POST", { kind, note: note.trim() || undefined });
-    if (ok) setNote("");
+    if (ok) {
+      setNote("");
+      setKind(nextEvidenceKind(missing, kind));
+    }
   }
 
   return (

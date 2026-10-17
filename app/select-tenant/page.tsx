@@ -21,8 +21,8 @@ export default async function SelectTenantPage({ searchParams }: { searchParams:
 
   if (!result.ok) {
     return (
-      <main className="center-page">
-        <Brand />
+      <main className="center-page" id="main">
+        <div className="center-head"><Brand /><LogoutButton /></div>
         <ProblemMessage problem={result.problem} />
       </main>
     );

@@ -13,8 +13,8 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   const result = await requireMe();
   if (!result.ok) {
     return (
-      <main className="center-page">
-        <Brand />
+      <main className="center-page" id="main">
+        <div className="center-head"><Brand /><LogoutButton /></div>
         <ProblemMessage problem={result.problem} />
       </main>
     );

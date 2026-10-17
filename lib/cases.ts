@@ -35,6 +35,28 @@ export type CaseDetail = CaseSummary & {
   transitions: Transition[];
 };
 
+/** GET /api/members row; userId is null until the invitation is accepted. */
+export type Member = {
+  id: string;
+  userId: string | null;
+  email: string;
+  displayName: string | null;
+  role: string;
+  status: string;
+};
+
+/** Members a case can be assigned to: active and linked to a user. Roles are left to the backend (422). */
+export function assignableMembers(members: readonly Member[]): (Member & { userId: string })[] {
+  return members
+    .filter((m): m is Member & { userId: string } => m.status === "ACTIVE" && !!m.userId)
+    .sort((a, b) => a.email.localeCompare(b.email, "tr"));
+}
+
+/** Evidence kind to preselect after adding `added`: the next still-missing kind, else keep `added`. */
+export function nextEvidenceKind(missing: readonly string[], added: string): string {
+  return missing.find((k) => k !== added) ?? added;
+}
+
 export const STATUS_LABELS: Record<CaseStatus, string> = {
   Open: "Açık",
   InProgress: "Hazırlanıyor",
