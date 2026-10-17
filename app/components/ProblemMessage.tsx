@@ -1,10 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { describeProblem, type Problem } from "../../lib/problem";
+import { describeProblem, type Problem, type ProblemContext } from "../../lib/problem";
 
 /** Turkish problem text with the next step and the trace id shown as "Destek kodu". */
-export function ProblemMessage({ problem, onDismiss, context }: { problem: Problem; onDismiss?: () => void; context?: "case" | "admin" }) {
+export function ProblemMessage({ problem, onDismiss, context }: { problem: Problem; onDismiss?: () => void; context?: ProblemContext }) {
   const router = useRouter();
   const d = describeProblem(problem, context);
   return (

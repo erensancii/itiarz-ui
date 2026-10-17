@@ -68,3 +68,25 @@ describe("team helpers", () => {
     expect(isEmail("")).toBe(false);
   });
 });
+
+describe("admin CONFLICT texts are fixed Turkish", () => {
+  const english = { status: 409, code: "CONFLICT", detail: "Already exists in Keycloak realm" };
+  it("never passes the backend detail through", () => {
+    for (const ctx of ["admin", "tenant-create", "tenant-reinvite"] as const) {
+      const d = describeProblem(english, ctx);
+      expect(d.message).not.toMatch(/Keycloak|Already/);
+      expect(d.message).toMatch(/[çğıöşü]/);
+    }
+  });
+  it("gives the re-invite a next step and the slug case its own text", () => {
+    expect(describeProblem(english, "tenant-reinvite").message).toMatch(/gelen kutusunu/);
+    expect(describeProblem(english, "tenant-create").message).toMatch(/kısa ad/);
+  });
+});
+
+describe("admin context drops other backend details", () => {
+  it("uses fixed text for 404 and unknown 4xx", () => {
+    expect(describeProblem({ status: 404, detail: "tenant row missing in realm" }, "admin").message).not.toMatch(/realm/);
+    expect(describeProblem({ status: 400, detail: "Bad internal thing" }, "admin").message).not.toMatch(/internal/);
+  });
+});

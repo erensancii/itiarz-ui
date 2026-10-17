@@ -18,11 +18,16 @@ export type ProblemDescription = {
   fieldErrors: Record<string, string>;
 };
 
+/** Where a problem came from: case screens, or an admin call whose 409 has a call-specific meaning. */
+export type ProblemContext = "case" | "admin" | "tenant-create" | "tenant-reinvite";
+
 const GENERIC =
   "İşlem şu anda tamamlanamadı. Birkaç dakika sonra tekrar deneyin; sorun sürerse destek koduyla bize ulaşın.";
 
 /** Turkish, non-blaming text with a next step for a problem response (spec §8). */
-export function describeProblem(p: Problem, context: "case" | "admin" = "case"): ProblemDescription {
+export function describeProblem(p: Problem, context: ProblemContext = "case"): ProblemDescription {
+  // Outside case screens the backend detail (possibly English or internal) is never shown.
+  if (context !== "case" && p.detail !== undefined) p = { ...p, detail: undefined };
   const fieldErrors: Record<string, string> = {};
   for (const e of p.errors ?? []) if (e?.field && !(e.field in fieldErrors)) fieldErrors[e.field] = e.message;
   const base = { supportCode: p.traceId, fieldErrors };
@@ -37,8 +42,19 @@ export function describeProblem(p: Problem, context: "case" | "admin" = "case"):
         message: "Bu dosyayı siz hazırladığınız için onaylayamazsınız. Başka bir Onaylayıcı'dan onay isteyin." };
     // Outside case screens a 409 is a business conflict whose backend text already says what to do.
     case "CONFLICT":
+      // Fixed texts per call: the backend detail is never passed through here.
+      if (context === "tenant-create") {
+        return { ...base, title: "Kısa ad kullanımda",
+          message: "Bu kısa ad (slug) başka bir şirket tarafından kullanılıyor. Farklı bir kısa ad seçin." };
+      }
+      if (context === "tenant-reinvite") {
+        return { ...base, title: "Davet zaten var",
+          message: "Bu e-posta adresine davet zaten gönderilmiş ya da kişi zaten üye. "
+            + "Kişiden gelen kutusunu (ve gereksiz klasörünü) kontrol etmesini isteyin." };
+      }
       if (context === "admin") {
-        return { ...base, title: "İşlem tamamlanamadı", message: p.detail ?? GENERIC };
+        return { ...base, title: "İşlem tamamlanamadı",
+          message: "Bu işlem mevcut bir kayıtla çakıştı. Listeyi yenileyip bilgileri kontrol edin, sonra tekrar deneyin." };
       }
       return { ...base, title: "Dosya güncellendi",
         message: "Bu dosya siz bakarken değişti. Güncel hâli yükleyip tekrar deneyin; yazdıklarınız korunur.", action: "reload" };

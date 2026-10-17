@@ -20,8 +20,9 @@ export function CreateTenantForm() {
   const [adminEmail, setAdminEmail] = useState("");
   const [errors, setErrors] = useState<Errors>({});
   const [result, setResult] = useState<TenantCreated | null>(null);
-  const serverErrors = problem ? describeProblem(problem, "admin").fieldErrors : {};
-  const slugConflict = problem?.code === "CONFLICT" ? problem.detail : undefined;
+  const serverErrors = problem ? describeProblem(problem, "tenant-create").fieldErrors : {};
+  // The only 409 this call returns is a taken slug.
+  const slugConflict = problem?.code === "CONFLICT" ? describeProblem(problem, "tenant-create").message : undefined;
   const errorFor = (f: keyof Errors) => errors[f] ?? serverErrors[f] ?? (f === "slug" ? slugConflict : undefined);
 
   function clear(f: keyof Errors) {
@@ -85,7 +86,7 @@ export function CreateTenantForm() {
         {result && (result.inviteSent
           ? <p className="success" role="status">{result.name} oluşturuldu. {result.adminEmail} adresine yönetici daveti gönderildi.</p>
           : <div className="problem" role="alert"><p>{INVITE_FAILED}</p></div>)}
-        {problem && !fieldProblem && <ProblemMessage problem={problem} context="admin" onDismiss={clearProblem} />}
+        {problem && !fieldProblem && <ProblemMessage problem={problem} context="tenant-create" onDismiss={clearProblem} />}
       </div>
     </form>
   );

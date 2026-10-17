@@ -13,7 +13,7 @@ export function TenantActions({ id, name, status }: { id: string; name: string; 
   const [emailError, setEmailError] = useState<string | null>(null);
   const [sentTo, setSentTo] = useState<string | null>(null);
   const suspended = status === "SUSPENDED";
-  const emailMsg = emailError ?? (problem ? describeProblem(problem, "admin").fieldErrors.email : undefined);
+  const emailMsg = emailError ?? (problem ? describeProblem(problem, "tenant-reinvite").fieldErrors.email : undefined);
 
   async function invite(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -51,7 +51,7 @@ export function TenantActions({ id, name, status }: { id: string; name: string; 
         </form>
       )}
       {sentTo && <p className="success" role="status">{sentTo} adresine davet gönderildi.</p>}
-      {problem && !emailMsg && <ProblemMessage problem={problem} context="admin" onDismiss={clearProblem} />}
+      {problem && !emailMsg && <ProblemMessage problem={problem} context="tenant-reinvite" onDismiss={clearProblem} />}
     </div>
   );
 }
