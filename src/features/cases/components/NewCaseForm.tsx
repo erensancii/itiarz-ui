@@ -5,7 +5,7 @@ import { useState } from "react";
 import { REASON_LABELS } from "@/features/cases/model";
 import { useApiAction } from "@/shared/api/apiClient";
 import { describeProblem } from "@/shared/api/problem";
-import { ProblemMessage } from "@/shared/components/ProblemMessage";
+import { ProblemAlert } from "@/shared/components/ProblemAlert";
 
 const PROVIDERS = ["iyzico", "PayTR", "Param", "Papara", "Stripe"];
 
@@ -104,7 +104,7 @@ export function NewCaseForm() {
       <div className="form-actions">
         <button type="submit" className="btn btn-primary" disabled={busy}>İtirazı kaydet</button>
       </div>
-      {problem && <div className="form-problem"><ProblemMessage problem={problem} onDismiss={clearProblem} /></div>}
+      {problem && <div className="form-problem"><ProblemAlert problem={problem} onDismiss={clearProblem} /></div>}
     </form>
   );
 }

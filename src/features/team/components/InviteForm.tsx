@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useApiAction } from "@/shared/api/apiClient";
 import { describeProblem } from "@/shared/api/problem";
 import { isEmail, type RoleOption } from "@/features/team/model";
-import { ProblemMessage } from "@/shared/components/ProblemMessage";
+import { ProblemAlert } from "@/shared/components/ProblemAlert";
 
 export function InviteForm({ roles }: { roles: RoleOption[] }) {
   const { run, busy, problem, clearProblem } = useApiAction();
@@ -49,7 +49,7 @@ export function InviteForm({ roles }: { roles: RoleOption[] }) {
       <button type="submit" className="btn btn-primary" disabled={busy}>Daveti gönder</button>
       <div className="form-problem">
         {sent && <p className="success" role="status">{sent} adresine davet gönderildi. Kişi bağlantıdan hesabını oluşturunca listede etkin görünür.</p>}
-        {problem && !emailMsg && <ProblemMessage problem={problem} context="admin" onDismiss={clearProblem} />}
+        {problem && !emailMsg && <ProblemAlert problem={problem} context="admin" onDismiss={clearProblem} />}
       </div>
     </form>
   );

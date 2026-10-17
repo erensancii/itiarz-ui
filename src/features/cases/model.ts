@@ -66,6 +66,18 @@ export const STATUS_LABELS: Record<CaseStatus, string> = {
   Lost: "Kaybedildi",
 };
 
+export type StatusColor = "default" | "info" | "warning" | "primary" | "success" | "error";
+
+/** Chip colour per status (MUI palette names). */
+export const STATUS_COLORS: Record<CaseStatus, StatusColor> = {
+  Open: "default",
+  InProgress: "info",
+  Ready: "warning",
+  Submitted: "primary",
+  Won: "success",
+  Lost: "error",
+};
+
 export const REASON_LABELS: Record<CaseReason, string> = {
   NotReceived: "Ürün ulaşmadı",
   Fraud: "Yetkisiz işlem",

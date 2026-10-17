@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { TransitionOption } from "@/features/cases/model";
 import { useApiAction } from "@/shared/api/apiClient";
-import { ProblemMessage } from "@/shared/components/ProblemMessage";
+import { ProblemAlert } from "@/shared/components/ProblemAlert";
 
 const REASON_MAX = 500;
 
@@ -73,7 +73,7 @@ export function TransitionActions({ caseId, version, options, missingCount }: {
           </div>
         </form>
       )}
-      {problem && <ProblemMessage problem={problem} onDismiss={clearProblem} />}
+      {problem && <ProblemAlert problem={problem} onDismiss={clearProblem} />}
     </div>
   );
 }

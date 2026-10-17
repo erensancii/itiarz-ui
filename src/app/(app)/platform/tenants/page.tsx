@@ -2,7 +2,7 @@ import { formatDateTime } from "@/features/cases/model";
 import { can } from "@/shared/auth/me";
 import type { PlatformTenant } from "@/features/platform/model";
 import { apiGet, requireMe } from "@/shared/api/backend.server";
-import { ProblemMessage } from "@/shared/components/ProblemMessage";
+import { ProblemAlert } from "@/shared/components/ProblemAlert";
 import { CreateTenantForm } from "@/features/platform/components/CreateTenantForm";
 import { TenantActions } from "@/features/platform/components/TenantActions";
 
@@ -11,9 +11,9 @@ export const metadata = { title: "Şirketler | itiarz" };
 
 export default async function PlatformTenantsPage() {
   const meResult = await requireMe();
-  if (!meResult.ok) return <ProblemMessage problem={meResult.problem} />;
+  if (!meResult.ok) return <ProblemAlert problem={meResult.problem} />;
   if (!meResult.me.platformAdmin || !can(meResult.me, "tenant:create")) {
-    return <ProblemMessage problem={{ status: 403, detail: "Şirket yönetimi yalnızca platform yöneticilerine açık." }} />;
+    return <ProblemAlert problem={{ status: 403, detail: "Şirket yönetimi yalnızca platform yöneticilerine açık." }} />;
   }
 
   const result = await apiGet<PlatformTenant[]>("/api/platform/tenants");
@@ -34,7 +34,7 @@ export default async function PlatformTenantsPage() {
       </section>
 
       {!result.ok ? (
-        <ProblemMessage problem={result.problem} context="admin" />
+        <ProblemAlert problem={result.problem} context="admin" />
       ) : tenants.length === 0 ? (
         <div className="empty"><p>Henüz şirket yok. Yukarıdaki formdan ilk şirketi oluşturun.</p></div>
       ) : (

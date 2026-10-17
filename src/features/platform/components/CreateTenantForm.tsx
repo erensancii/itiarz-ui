@@ -5,7 +5,7 @@ import { useApiAction } from "@/shared/api/apiClient";
 import { describeProblem } from "@/shared/api/problem";
 import { suggestSlug, type TenantCreated } from "@/features/platform/model";
 import { isEmail } from "@/features/team/model";
-import { ProblemMessage } from "@/shared/components/ProblemMessage";
+import { ProblemAlert } from "@/shared/components/ProblemAlert";
 
 type Errors = Partial<Record<"name" | "slug" | "adminEmail", string>>;
 
@@ -85,7 +85,7 @@ export function CreateTenantForm() {
         {result && (result.inviteSent
           ? <p className="success" role="status">{result.name} oluşturuldu. {result.adminEmail} adresine yönetici daveti gönderildi.</p>
           : <div className="problem" role="alert"><p>{INVITE_FAILED}</p></div>)}
-        {problem && !fieldProblem && <ProblemMessage problem={problem} context="tenant-create" onDismiss={clearProblem} />}
+        {problem && !fieldProblem && <ProblemAlert problem={problem} context="tenant-create" onDismiss={clearProblem} />}
       </div>
     </form>
   );

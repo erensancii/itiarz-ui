@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useApiAction } from "@/shared/api/apiClient";
 import { describeProblem } from "@/shared/api/problem";
 import { isEmail } from "@/features/team/model";
-import { ProblemMessage } from "@/shared/components/ProblemMessage";
+import { ProblemAlert } from "@/shared/components/ProblemAlert";
 
 /** Suspend/activate and "re-invite the admin" for one tenant row. */
 export function TenantActions({ id, name, status }: { id: string; name: string; status: string }) {
@@ -51,7 +51,7 @@ export function TenantActions({ id, name, status }: { id: string; name: string; 
         </form>
       )}
       {sentTo && <p className="success" role="status">{sentTo} adresine davet gönderildi.</p>}
-      {problem && !emailMsg && <ProblemMessage problem={problem} context="tenant-reinvite" onDismiss={clearProblem} />}
+      {problem && !emailMsg && <ProblemAlert problem={problem} context="tenant-reinvite" onDismiss={clearProblem} />}
     </div>
   );
 }

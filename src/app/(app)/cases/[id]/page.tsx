@@ -6,8 +6,8 @@ import {
 } from "@/features/cases/model";
 import { can } from "@/shared/auth/me";
 import { apiGet, requireMe } from "@/shared/api/backend.server";
-import { ProblemMessage } from "@/shared/components/ProblemMessage";
-import { StatusBadge } from "@/features/cases/components/StatusBadge";
+import { ProblemAlert } from "@/shared/components/ProblemAlert";
+import { StatusChip } from "@/features/cases/components/StatusChip";
 import { AssigneeControl } from "@/features/cases/components/AssigneeControl";
 import { EvidenceForm } from "@/features/cases/components/EvidenceForm";
 import { TransitionActions } from "@/features/cases/components/TransitionActions";
@@ -34,11 +34,11 @@ function waitingText(c: CaseDetail): string {
 export default async function CaseDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const meResult = await requireMe();
-  if (!meResult.ok) return <ProblemMessage problem={meResult.problem} />;
+  if (!meResult.ok) return <ProblemAlert problem={meResult.problem} />;
   const me = meResult.me;
   if (!me.activeTenant) redirect("/select-tenant");
   if (!UUID.test(id)) {
-    return <ProblemMessage problem={{ status: 404, detail: "Bu adreste bir itiraz dosyası yok. İtiraz listesine dönüp yeniden seçin." }} />;
+    return <ProblemAlert problem={{ status: 404, detail: "Bu adreste bir itiraz dosyası yok. İtiraz listesine dönüp yeniden seçin." }} />;
   }
 
   const result = await apiGet<CaseDetail>(`/api/cases/${id}`);
@@ -46,7 +46,7 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ id:
     return (
       <>
         <p className="back"><Link href="/cases">İtiraz listesine dön</Link></p>
-        <ProblemMessage problem={result.problem} />
+        <ProblemAlert problem={result.problem} />
       </>
     );
   }
@@ -70,7 +70,7 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ id:
           <p className="page-sub">{c.provider}, sipariş {c.orderId}, {REASON_LABELS[c.reason] ?? c.reason}</p>
         </div>
         <div className="detail-status">
-          <StatusBadge status={c.status} />
+          <StatusChip status={c.status} />
           {state !== "done" && (
             <span className={`deadline-chip deadline-${state}`}>{formatRemaining(c.deadlineUtc, now)}</span>
           )}

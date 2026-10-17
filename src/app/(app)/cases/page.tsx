@@ -6,8 +6,8 @@ import {
 } from "@/features/cases/model";
 import { apiGet, requireMe } from "@/shared/api/backend.server";
 import { PermissionGate } from "@/shared/auth/PermissionGate";
-import { ProblemMessage } from "@/shared/components/ProblemMessage";
-import { StatusBadge } from "@/features/cases/components/StatusBadge";
+import { ProblemAlert } from "@/shared/components/ProblemAlert";
+import { StatusChip } from "@/features/cases/components/StatusChip";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "İtirazlar | itiarz" };
@@ -40,7 +40,7 @@ export default async function CasesPage() {
       </div>
 
       {!result.ok ? (
-        <ProblemMessage problem={result.problem} />
+        <ProblemAlert problem={result.problem} />
       ) : cases.length === 0 ? (
         <div className="empty">
           <p>Bu şirkette henüz itiraz dosyası yok.</p>
@@ -85,7 +85,7 @@ export default async function CasesPage() {
                     </td>
                     <td>{REASON_LABELS[c.reason] ?? c.reason}</td>
                     <td className="num">{formatMoney(c.amount, c.currency)}</td>
-                    <td><StatusBadge status={c.status} /></td>
+                    <td><StatusChip status={c.status} /></td>
                     <td>
                       {c.missing.length === 0 ? (
                         <span className="muted">Tamam</span>

@@ -4,7 +4,7 @@ import { actionLabel, targetLabel, type AuditPage } from "@/features/audit/model
 import { formatDateTime } from "@/features/cases/model";
 import { can } from "@/shared/auth/me";
 import { apiGet, requireMe } from "@/shared/api/backend.server";
-import { ProblemMessage } from "@/shared/components/ProblemMessage";
+import { ProblemAlert } from "@/shared/components/ProblemAlert";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Audit | itiarz" };
@@ -17,15 +17,15 @@ export default async function AuditPageRoute({ searchParams }: { searchParams: P
   const page = Number.isFinite(raw) && raw > 0 ? raw : 0;
 
   const meResult = await requireMe();
-  if (!meResult.ok) return <ProblemMessage problem={meResult.problem} />;
+  if (!meResult.ok) return <ProblemAlert problem={meResult.problem} />;
   if (!meResult.me.activeTenant) redirect("/select-tenant");
   if (!can(meResult.me, "audit:read")) {
-    return <ProblemMessage problem={{ status: 403,
+    return <ProblemAlert problem={{ status: 403,
       detail: "Audit kaydını görmek için yetkiniz yok. Gerekirse şirket yöneticinizden yetki isteyin." }} />;
   }
 
   const result = await apiGet<AuditPage>(`/api/audit?page=${page}&size=${PAGE_SIZE}`);
-  if (!result.ok) return <><div className="page-head"><h1>Audit</h1></div><ProblemMessage problem={result.problem} /></>;
+  if (!result.ok) return <><div className="page-head"><h1>Audit</h1></div><ProblemAlert problem={result.problem} /></>;
 
   const { items, total } = result.data;
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));

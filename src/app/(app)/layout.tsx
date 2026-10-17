@@ -4,7 +4,7 @@ import { can, roleLabel } from "@/shared/auth/me";
 import { requireMe } from "@/shared/api/backend.server";
 import { Brand, LogoutButton } from "@/shared/components/Brand";
 import { Nav, type NavItem } from "@/shared/components/Nav";
-import { ProblemMessage } from "@/shared/components/ProblemMessage";
+import { ProblemAlert } from "@/shared/components/ProblemAlert";
 import { TenantSwitcher } from "@/shared/components/TenantSwitcher";
 
 export const dynamic = "force-dynamic";
@@ -15,7 +15,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     return (
       <main className="center-page" id="main">
         <div className="center-head"><Brand /><LogoutButton /></div>
-        <ProblemMessage problem={result.problem} />
+        <ProblemAlert problem={result.problem} />
       </main>
     );
   }

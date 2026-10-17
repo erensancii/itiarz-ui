@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useApiAction } from "@/shared/api/apiClient";
 import type { RoleOption } from "@/features/team/model";
-import { ProblemMessage } from "@/shared/components/ProblemMessage";
+import { ProblemAlert } from "@/shared/components/ProblemAlert";
 
 /** Role change and removal for one member row. Removal asks for confirmation in a native modal dialog. */
 export function MemberActions({ id, email, role, roles }: { id: string; email: string; role: string; roles: RoleOption[] }) {
@@ -40,13 +40,13 @@ export function MemberActions({ id, email, role, roles }: { id: string; email: s
         onClick={() => { setConfirming(true); dialog.current?.showModal(); }}>
         Üyeliği kaldır
       </button>
-      {problem && !confirming && <ProblemMessage problem={problem} context="admin" onDismiss={clearProblem} />}
+      {problem && !confirming && <ProblemAlert problem={problem} context="admin" onDismiss={clearProblem} />}
 
       <dialog ref={dialog} className="confirm" aria-labelledby={`confirm-title-${id}`}
         onClose={() => { setConfirming(false); opener.current?.focus(); }}>
         <h2 id={`confirm-title-${id}`}>Üyeliği kaldır</h2>
         <p><strong>{email}</strong> bu şirketten çıkarılacak ve artık itirazlara erişemeyecek. Kişi tekrar davet edilebilir.</p>
-        {problem && confirming && <ProblemMessage problem={problem} context="admin" onDismiss={clearProblem} />}
+        {problem && confirming && <ProblemAlert problem={problem} context="admin" onDismiss={clearProblem} />}
         <div className="button-row">
           <button type="button" className="btn btn-danger" disabled={busy} onClick={remove}>Üyeliği kaldır</button>
           <button type="button" className="btn" autoFocus onClick={closeDialog}>Vazgeç</button>

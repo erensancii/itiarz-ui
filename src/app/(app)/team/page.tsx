@@ -3,7 +3,7 @@ import type { Member } from "@/features/cases/model";
 import { can, ROLE_LABELS, roleLabel } from "@/shared/auth/me";
 import { apiGet, requireMe } from "@/shared/api/backend.server";
 import { memberStatusLabel, type RoleOption } from "@/features/team/model";
-import { ProblemMessage } from "@/shared/components/ProblemMessage";
+import { ProblemAlert } from "@/shared/components/ProblemAlert";
 import { InviteForm } from "@/features/team/components/InviteForm";
 import { MemberActions } from "@/features/team/components/MemberActions";
 
@@ -14,11 +14,11 @@ const ROLE_OPTIONS: RoleOption[] = Object.entries(ROLE_LABELS).map(([value, labe
 
 export default async function TeamPage() {
   const meResult = await requireMe();
-  if (!meResult.ok) return <ProblemMessage problem={meResult.problem} />;
+  if (!meResult.ok) return <ProblemAlert problem={meResult.problem} />;
   const me = meResult.me;
   if (!me.activeTenant) redirect("/select-tenant");
   if (!can(me, "member:read")) {
-    return <ProblemMessage problem={{ status: 403,
+    return <ProblemAlert problem={{ status: 403,
       detail: "Ekip listesini görmek için yetkiniz yok. Gerekirse şirket yöneticinizden yetki isteyin." }} />;
   }
 
@@ -43,7 +43,7 @@ export default async function TeamPage() {
       )}
 
       {!result.ok ? (
-        <ProblemMessage problem={result.problem} context="admin" />
+        <ProblemAlert problem={result.problem} context="admin" />
       ) : members.length === 0 ? (
         <div className="empty"><p>Bu şirkette henüz üye yok.</p></div>
       ) : (

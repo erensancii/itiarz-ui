@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { loadMe } from "@/shared/auth/me";
 import { describeAuthError, type Problem } from "@/shared/api/problem";
 import { Brand, LogoutButton } from "@/shared/components/Brand";
-import { ProblemMessage } from "@/shared/components/ProblemMessage";
+import { ProblemAlert } from "@/shared/components/ProblemAlert";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +10,7 @@ function ErrorPage({ problem }: { problem: Problem }) {
   return (
     <main className="center-page" id="main">
       <div className="center-head"><Brand /><LogoutButton /></div>
-      <ProblemMessage problem={problem} />
+      <ProblemAlert problem={problem} />
     </main>
   );
 }

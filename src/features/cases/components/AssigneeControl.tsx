@@ -4,7 +4,7 @@ import { useState } from "react";
 import type { UserRef } from "@/features/cases/model";
 import { useApiAction } from "@/shared/api/apiClient";
 import { describeProblem } from "@/shared/api/problem";
-import { ProblemMessage } from "@/shared/components/ProblemMessage";
+import { ProblemAlert } from "@/shared/components/ProblemAlert";
 
 export type AssigneeOption = { userId: string; email: string; displayName: string | null };
 
@@ -70,7 +70,7 @@ export function AssigneeControl({ caseId, assignee, myId, canTakeCase, members }
           </button>
         )}
       </div>
-      {problem && !userIdError && <ProblemMessage problem={problem} onDismiss={clearProblem} />}
+      {problem && !userIdError && <ProblemAlert problem={problem} onDismiss={clearProblem} />}
     </div>
   );
 }

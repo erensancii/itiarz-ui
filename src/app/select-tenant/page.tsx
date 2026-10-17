@@ -2,7 +2,7 @@ import Link from "next/link";
 import { autoSwitchTarget, isSelectable, roleLabel, SUSPENDED_TENANT_NOTE } from "@/shared/auth/me";
 import { requireMe } from "@/shared/api/backend.server";
 import { Brand, LogoutButton } from "@/shared/components/Brand";
-import { ProblemMessage } from "@/shared/components/ProblemMessage";
+import { ProblemAlert } from "@/shared/components/ProblemAlert";
 import { AutoSubmit } from "@/features/tenant-selection/components/AutoSubmit";
 
 export const dynamic = "force-dynamic";
@@ -23,7 +23,7 @@ export default async function SelectTenantPage({ searchParams }: { searchParams:
     return (
       <main className="center-page" id="main">
         <div className="center-head"><Brand /><LogoutButton /></div>
-        <ProblemMessage problem={result.problem} />
+        <ProblemAlert problem={result.problem} />
       </main>
     );
   }

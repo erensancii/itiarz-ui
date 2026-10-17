@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { EVIDENCE_LABELS, nextEvidenceKind, type CaseStatus } from "@/features/cases/model";
 import { useApiAction } from "@/shared/api/apiClient";
-import { ProblemMessage } from "@/shared/components/ProblemMessage";
+import { ProblemAlert } from "@/shared/components/ProblemAlert";
 
 /** Adds an evidence record; defaults to the first missing required kind. */
 export function EvidenceForm({ caseId, missing, status }: { caseId: string; missing: string[]; status: CaseStatus }) {
@@ -45,7 +45,7 @@ export function EvidenceForm({ caseId, missing, status }: { caseId: string; miss
         </p>
       )}
       <button type="submit" className="btn" disabled={busy}>Kanıtı ekle</button>
-      {problem && <ProblemMessage problem={problem} onDismiss={clearProblem} />}
+      {problem && <ProblemAlert problem={problem} onDismiss={clearProblem} />}
     </form>
   );
 }
